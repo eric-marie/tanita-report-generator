@@ -1,9 +1,14 @@
 /* ==========================================================================
-   Graphique d'évolution — courbe SVG d'une mesure, sans librairie externe.
-   Les données sont lues dans <script type="application/json" id="donnees-graphiques">,
-   chaque conteneur .graphique indique sa série avec data-index.
-   Survol : curseur vertical et bulle sur la pesée la plus proche.
-   Clavier : le graphique prend le focus, flèches gauche/droite pour changer de pesée.
+   Graphique d'évolution — courbe SVG d'une série, sans librairie externe.
+   Utilisation : TanitaGraphique.dessiner(conteneur, serie), où serie vaut
+   { nom, unite, decimales, points: [{ t, v, texte, libelle, detail }] } :
+     t       instant en ms (ou null : points régulièrement espacés)
+     v       valeur numérique
+     texte   valeur affichée (ex. "100,1")
+     libelle libellé court du point (ex. "14/08/2024")
+     detail  seconde ligne de la bulle (ex. "14/08/2024 à 16:34:32")
+   Survol : curseur vertical et bulle sur le point le plus proche.
+   Clavier : le graphique prend le focus, flèches gauche/droite pour changer de point.
    ========================================================================== */
 (function () {
     "use strict";
@@ -11,9 +16,6 @@
     var SVG = "http://www.w3.org/2000/svg";
     var HAUTEUR = 260;
     var MARGES = { haut: 16, droite: 64, bas: 32, gauche: 52 };
-    var source = document.getElementById("donnees-graphiques");
-    if (!source) return;
-    var series = JSON.parse(source.textContent);
 
     // Créer un élément SVG avec ses attributs
     function element(nom, attributs, parent) {
@@ -39,7 +41,7 @@
     }
 
     // Échelle verticale arrondie autour des valeurs (la courbe ne part pas de zéro).
-    // La précision de la balance (ex. 0,1 kg) fixe le pas minimum, et l'étendue couvre au moins
+    // La précision des valeurs (ex. 0,1 kg) fixe le pas minimum, et l'étendue couvre au moins
     // 10 fois cette précision, pour ne pas faire d'une variation de 0,1 kg une chute vertigineuse.
     function echelleVerticale(valeurs, decimalesDonnees) {
         var min = Math.min.apply(null, valeurs), max = Math.max.apply(null, valeurs);
@@ -51,7 +53,7 @@
             max = centre + etendueMin / 2;
         }
         var pas = Math.max(pasRond(max - min, 4), precision);
-        // Pas de graduation plus précise que la balance (ex. 0,25 kg -> 0,5 kg)
+        // Pas de graduation plus précise que les valeurs (ex. 0,25 kg -> 0,5 kg)
         if (decimalesDe(pas) > decimalesDonnees) pas *= 2;
         var bas = Math.floor(min / pas) * pas, haut = Math.ceil(max / pas) * pas;
         var decimales = decimalesDe(pas), graduations = [];
@@ -73,12 +75,9 @@
         return jour + "/" + String(d.getUTCFullYear()).slice(2);
     }
 
-    function dessiner(conteneur) {
-        var serie = series[+conteneur.dataset.index];
+    function dessiner(conteneur, serie) {
         var largeur = conteneur.clientWidth;
-        if (!serie || !largeur) return;
-        if (conteneur._largeur === largeur) return;
-        conteneur._largeur = largeur;
+        if (!largeur) return;
         while (conteneur.firstChild) conteneur.removeChild(conteneur.firstChild);
 
         // Mesure absente de toutes les pesées (ex. non fournie par la balance pour un enfant)
@@ -95,7 +94,7 @@
         var gauche = MARGES.gauche, droite = largeur - MARGES.droite;
         var haut = MARGES.haut, bas = HAUTEUR - MARGES.bas;
 
-        // Échelle horizontale : selon le temps réel, sinon pesées régulièrement espacées
+        // Échelle horizontale : selon le temps réel, sinon points régulièrement espacés
         var tMin = temporel ? points[0].t : 0;
         var tMax = temporel ? points[points.length - 1].t : points.length - 1;
         function x(p, i) {
@@ -106,12 +105,12 @@
         function y(v) { return bas - (v - ech.bas) / (ech.haut - ech.bas) * (bas - haut); }
 
         var dernier = points[points.length - 1];
+        var unite = serie.unite ? " " + serie.unite : "";
         var svg = element("svg", {
             width: largeur, height: HAUTEUR, viewBox: "0 0 " + largeur + " " + HAUTEUR,
             role: "img", tabindex: "0",
-            "aria-label": "Évolution de " + serie.nom + " : " + points.length + " pesée(s), dernière valeur " +
-                dernier.texte + (serie.unite ? " " + serie.unite : "") + " le " + dernier.date +
-                ". Flèches gauche et droite pour parcourir les pesées."
+            "aria-label": "Évolution de " + serie.nom + " : " + points.length + " point(s), dernière valeur " +
+                dernier.texte + unite + " (" + dernier.libelle + "). Flèches gauche et droite pour parcourir les points."
         }, conteneur);
 
         // Grille horizontale et graduations verticales
@@ -121,7 +120,7 @@
                 .textContent = nombreFr(v, ech.decimales);
         });
 
-        // Graduations horizontales : dates réparties sur la période, sinon numéro de pesée
+        // Graduations horizontales : dates réparties sur la période, sinon libellés du premier et du dernier point
         if (temporel && tMax > tMin) {
             var nb = Math.max(2, Math.min(6, Math.floor((droite - gauche) / 110) + 1));
             for (var k = 0; k < nb; k++) {
@@ -137,7 +136,7 @@
                 element("text", {
                     x: x(points[i], i), y: bas + 20, "class": "g-texte",
                     "text-anchor": points.length === 1 ? "middle" : i === 0 ? "start" : "end"
-                }, svg).textContent = points[i].date;
+                }, svg).textContent = points[i].libelle;
             });
         }
 
@@ -152,14 +151,14 @@
         }
         element("line", { x1: gauche, x2: droite, y1: bas, y2: bas, "class": "g-axe" }, svg);
 
-        // Points (masqués au-delà de 60 pesées, sauf le dernier)
+        // Points (masqués au-delà de 60, sauf le dernier)
         points.forEach(function (p, i) {
             if (points.length <= 60 || i === points.length - 1) {
                 element("circle", { cx: x(p, i), cy: y(p.v), r: 4, "class": "g-point" }, svg);
             }
         });
 
-        // Valeur de la dernière pesée, au bout de la courbe
+        // Valeur du dernier point, au bout de la courbe
         element("text", { x: x(dernier, points.length - 1) + 10, y: y(dernier.v), dy: "0.32em", "class": "g-valeur" }, svg)
             .textContent = dernier.texte;
 
@@ -170,9 +169,9 @@
         bulle.className = "infobulle";
         bulle.hidden = true;
         var bulleValeur = document.createElement("strong");
-        var bulleDate = document.createElement("span");
+        var bulleDetail = document.createElement("span");
         bulle.appendChild(bulleValeur);
-        bulle.appendChild(bulleDate);
+        bulle.appendChild(bulleDetail);
         conteneur.appendChild(bulle);
 
         var actif = -1;
@@ -185,8 +184,8 @@
             repere.setAttribute("cx", px);
             repere.setAttribute("cy", py);
             repere.setAttribute("visibility", "visible");
-            bulleValeur.textContent = p.texte + (serie.unite ? " " + serie.unite : "");
-            bulleDate.textContent = p.date + " à " + p.heure;
+            bulleValeur.textContent = p.texte + unite;
+            bulleDetail.textContent = p.detail;
             bulle.hidden = false;
             var gauchePx = Math.min(Math.max(px - bulle.offsetWidth / 2, 0), largeur - bulle.offsetWidth);
             bulle.style.left = gauchePx + "px";
@@ -227,18 +226,5 @@
         });
     }
 
-    // Dessiner les graphiques visibles : au chargement, à chaque changement de mesure
-    // (window.dessinerGraphiques, appelée par la page) et quand la largeur change
-    var conteneurs = document.querySelectorAll(".graphique[data-index]");
-    function toutDessiner() { conteneurs.forEach(dessiner); }
-    window.dessinerGraphiques = toutDessiner;
-    toutDessiner();
-    if ("ResizeObserver" in window) {
-        var observateur = new ResizeObserver(function (entrees) {
-            entrees.forEach(function (entree) { dessiner(entree.target); });
-        });
-        conteneurs.forEach(function (c) { observateur.observe(c); });
-    } else {
-        window.addEventListener("resize", toutDessiner);
-    }
+    window.TanitaGraphique = { dessiner: dessiner };
 })();

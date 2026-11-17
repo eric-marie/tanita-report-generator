@@ -37,7 +37,8 @@ tanita-report-generator/
 ├── rapport/                 ← pages générées (ignorées par Git)
 │   └── assets/              ← versionné
 │       ├── style.css        ← feuille de style des pages
-│       └── graphique.js     ← dessin des graphiques de la page Évolution
+│       ├── graphique.js     ← dessin des graphiques de la page Évolution
+│       └── evolution.js     ← page Évolution : précision, moyennes, synthèse et historique
 ├── templates/               ← templates Jinja2 des pages
 │   ├── _base.html           ← structure commune (en-tête, navigation, pied de page)
 │   ├── _macros.html         ← éléments réutilisables (variations, valeurs, profil)
@@ -80,7 +81,7 @@ python generate_report.py
 
    Un profil qui a **au moins une pesée** est considéré comme utilisé et reçoit son propre rapport. Un profil configuré mais sans pesée est seulement signalé sur la page d'accueil. Les autres sont ignorés. La carte prévoit 8 fichiers de chaque sorte : si l'un des fichiers 5 à 8 n'est pas vide, le script le signale et l'ignore.
 2. **Il lit les pesées** de chaque profil, une ligne par pesée. Chaque valeur est précédée de son code dans le fichier (`Wk,100.1` pour un poids de 100,1 kg) : le script lit les valeurs **par leur code**, pas par leur position, et en extrait 27 indicateurs : date, heure, sexe, âge, taille, niveau d'activité, type de corps, poids, IMC, masse grasse (totale et par bras, jambe et buste), masse musculaire (totale et par segment), masse osseuse, graisse viscérale, apport calorique quotidien, âge métabolique et eau corporelle. Une valeur absente de la ligne reste vide (voir *Contrôles à la lecture*).
-3. **Il calcule les variations.** Les pesées sont classées de la plus récente à la plus ancienne et, pour chaque mesure, il calcule la variation par rapport à la pesée précédente. Pour la page d'évolution, il calcule aussi le minimum, le maximum et la variation totale de chaque mesure, et prépare les points des graphiques (date et heure de chaque pesée, valeur, précision de la mesure).
+3. **Il calcule les variations.** Les pesées sont classées de la plus récente à la plus ancienne et, pour chaque mesure, il calcule la variation par rapport à la pesée précédente. Pour la page d'évolution, il intègre à la page les pesées de chaque mesure (date et heure, valeur, précision de la mesure) : la synthèse, les moyennes et l'historique sont ensuite calculés dans le navigateur.
 4. **Il génère les pages HTML** à partir des templates Jinja2 du dossier `templates/`. Les nombres sont affichés avec une virgule décimale, et les codes de la balance en clair, d'après le manuel :
    - sexe : 1 = Homme, 2 = Femme ;
    - niveau d'activité : 1 = peu ou pas d'exercice, 2 = activité modérée, 3 = activité intense ;
@@ -112,7 +113,8 @@ rapport/
 │   └── …
 └── assets/
     ├── style.css
-    └── graphique.js
+    ├── graphique.js
+    └── evolution.js
 ```
 
 | Fichier | Contenu |
@@ -120,7 +122,7 @@ rapport/
 | `index.html` | Liste des profils trouvés : nom, sexe, âge, taille, dernier poids, date de la dernière pesée et nombre de pesées. Les profils configurés sans pesée y sont signalés. **S'il n'y a qu'un seul profil**, cette page redirige directement vers son rapport. |
 | `profil-n/resultats.html` | Profil, cartes des 8 mesures principales de la dernière pesée avec leur variation, puis tableau de toutes les pesées. |
 | `profil-n/details.html` | Détail d'une pesée choisie dans une liste déroulante : profil, composition globale avec variations, et répartition de la graisse et du muscle par segment (bras, jambes, buste). |
-| `profil-n/evolution.html` | Pour une mesure choisie dans une liste déroulante : dernière valeur, minimum, maximum, variation totale, **graphique de l'évolution**, puis historique avec la variation entre chaque pesée. |
+| `profil-n/evolution.html` | Pour une mesure choisie dans une liste déroulante et une **précision** au choix (mesures, jour, semaine ou mois) : dernière valeur, minimum, maximum, variation totale, **graphique de l'évolution**, puis historique avec la variation entre chaque point. |
 
 Dans les pages d'un profil, l'en-tête affiche le nom du profil, un lien « Changer » vers la page d'accueil (s'il y a plusieurs profils) et la navigation entre les trois pages.
 
@@ -128,12 +130,25 @@ Il suffit d'ouvrir `rapport/index.html` dans un navigateur. Aucune connexion Int
 
 ### Mise en forme
 
-Les pages n'utilisent aucune librairie externe : la mise en forme est dans `rapport/assets/style.css`, le dessin des graphiques dans `rapport/assets/graphique.js`, tous deux versionnés avec le projet. Le reste du JavaScript (listes déroulantes) est écrit directement dans les templates.
+Les pages n'utilisent aucune librairie externe : la mise en forme est dans `rapport/assets/style.css`, le dessin des graphiques dans `rapport/assets/graphique.js` et la logique de la page Évolution dans `rapport/assets/evolution.js`, tous versionnés avec le projet. Le reste du JavaScript (liste déroulante de la page Détails) est écrit directement dans les templates.
 
 - Les pages s'adaptent aux petits écrans et suivent le mode clair ou sombre du système.
 - Les variations sont affichées avec une flèche et une couleur neutre : une hausse ou une baisse n'est ni bonne ni mauvaise en soi (une baisse de la graisse n'a pas le même sens qu'une baisse de la masse musculaire).
 
 Si le dossier `rapport/assets/` est supprimé, il faut le récupérer depuis Git (`git checkout -- rapport/assets`).
+
+### Précision de la page Évolution
+
+Un choix en haut de la page Évolution règle la précision de l'affichage :
+
+| Précision | Ce qui est affiché |
+|---|---|
+| **Mesures** | Chaque pesée telle quelle, avec sa date et son heure. |
+| **Jour** *(par défaut)* | La moyenne de toutes les pesées de chaque journée. |
+| **Semaine** | La moyenne de toutes les pesées de chaque semaine, du lundi au dimanche (« Semaine du 12/08/2024 »). |
+| **Mois** | La moyenne de toutes les pesées de chaque mois (« août 2024 »). |
+
+Les cartes de synthèse, le graphique et l'historique suivent la précision choisie. En moyenne, l'historique indique le nombre de pesées de chaque période, et la bulle du graphique le rappelle (« moyenne de 3 pesées »). Les moyennes gardent la précision de la balance (0,1 kg, 0,1 %…). Les mesures entières comme la graisse viscérale ou l'âge métabolique gagnent une décimale, sauf l'apport calorique. Sur le graphique, chaque période est placée en son milieu. Si une date de pesée est illisible, seule la précision « Mesures » est disponible.
 
 ### Graphique d'évolution
 
@@ -141,7 +156,7 @@ Le graphique de la page Évolution est une courbe SVG dessinée dans le navigate
 
 - **Axe horizontal** : le vrai calendrier. L'écart entre deux points correspond au temps écoulé entre les pesées. Si une date est illisible, les pesées sont espacées régulièrement.
 - **Axe vertical** : il ne part pas de zéro, il est cadré sur les valeurs de la mesure. Les graduations ne sont jamais plus précises que la balance (pas de 0,25 kg pour une mesure au dixième), et l'étendue couvre au moins 10 fois cette précision, pour qu'une variation de 0,1 kg n'apparaisse pas comme une chute vertigineuse.
-- **Lecture** : la dernière valeur est écrite au bout de la courbe. Au survol, un curseur vertical et une bulle donnent la valeur, la date et l'heure de la pesée la plus proche. Au clavier, le graphique prend le focus avec Tab, et les flèches gauche et droite parcourent les pesées.
+- **Lecture** : la dernière valeur est écrite au bout de la courbe. Au survol, un curseur vertical et une bulle donnent la valeur du point le plus proche, avec la date et l'heure de la pesée, ou la période et le nombre de pesées moyennées. Au clavier, le graphique prend le focus avec Tab, et les flèches gauche et droite parcourent les points.
 - **Couleur** : la courbe utilise la variable CSS `--serie` (`#2f6fde` en mode clair, `#5b8ff8` en mode sombre). Ces deux teintes ont été vérifiées contre leur fond (plage de luminosité, saturation et contraste d'au moins 3:1).
 - Le tableau d'historique sous le graphique reste la version texte des mêmes valeurs.
 

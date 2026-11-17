@@ -1,92 +1,51 @@
 {% extends "_base.html" %}
-{% import "_macros.html" as m %}
 
 {% block html_head_title %}Évolution{% endblock %}
 {% block header %}Évolution{% endblock %}
-{% block sous_titre %}<p class="sous-titre">Historique d'une mesure, de la pesée la plus récente à la plus ancienne</p>{% endblock %}
+{% block sous_titre %}<p class="sous-titre">Historique d'une mesure, pesée par pesée ou en moyenne par jour, semaine ou mois</p>{% endblock %}
 
 {% block outils %}
-{% if pesees %}
-<div class="selecteur">
-    <label for="mesureSelect">Mesure</label>
-    <select id="mesureSelect">
-    {% for cle in mesures %}
-        <option value="mesure-{{ loop.index }}">{{ cle }}</option>
-    {% endfor %}
-    </select>
+<div class="outils">
+    <fieldset class="selecteur segmente">
+        <legend>Précision</legend>
+        <div class="segmente-options">
+        {% for valeur, libelle in [("mesures", "Mesures"), ("jour", "Jour"), ("semaine", "Semaine"), ("mois", "Mois")] %}
+            <label><input type="radio" name="precision" value="{{ valeur }}"{% if valeur == "jour" %} checked{% endif %}><span>{{ libelle }}</span></label>
+        {% endfor %}
+        </div>
+    </fieldset>
+    <div class="selecteur">
+        <label for="mesureSelect">Mesure</label>
+        <select id="mesureSelect">
+        {% for cle in mesures %}
+            <option value="{{ loop.index0 }}">{{ cle }}</option>
+        {% endfor %}
+        </select>
+    </div>
 </div>
-{% endif %}
 {% endblock %}
 
 {% block content %}
-{% for cle in mesures %}
-{% set stats = statistiques[cle] %}
-<section class="evolution" id="mesure-{{ loop.index }}"{% if not loop.first %} hidden{% endif %}>
-    <!-- Synthèse -->
-    <div class="grille-cartes">
-        <div class="carte">
-            <div class="carte-libelle">Dernière valeur</div>
-            <div class="carte-valeur">{{ m.valeur(stats.derniere, cle) }}</div>
-        </div>
-        <div class="carte">
-            <div class="carte-libelle">Minimum</div>
-            <div class="carte-valeur">{{ m.valeur(stats.min, cle) }}</div>
-        </div>
-        <div class="carte">
-            <div class="carte-libelle">Maximum</div>
-            <div class="carte-valeur">{{ m.valeur(stats.max, cle) }}</div>
-        </div>
-        <div class="carte">
-            <div class="carte-libelle">Variation totale</div>
-            <div class="carte-valeur">{% if stats.total %}{{ m.valeur(stats.total.texte, cle) }}{% else %}<span class="sans-valeur">—</span>{% endif %}</div>
-            <div class="carte-pied">depuis la première pesée</div>
-        </div>
-    </div>
+<noscript><p class="vide">Cette page a besoin de JavaScript pour afficher l'évolution des mesures.</p></noscript>
 
-    <!-- Graphique (dessiné par assets/graphique.js) -->
-    <h2>{{ nom(cle) }}{% if unite(cle) %} ({{ unite(cle) }}){% endif %}</h2>
-    <div class="carte carte-graphique">
-        <div class="graphique" data-index="{{ loop.index0 }}"></div>
-        <noscript><p class="note">Le graphique nécessite JavaScript. Les valeurs sont dans le tableau ci-dessous.</p></noscript>
-    </div>
+<!-- Synthèse (remplie par assets/evolution.js) -->
+<div class="grille-cartes" id="cartesEvolution"></div>
 
-    <!-- Historique -->
-    <h2>Historique</h2>
-    <div class="tableau-conteneur">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Valeur{% if unite(cle) %}<span class="unite">{{ unite(cle) }}</span>{% endif %}</th>
-                    <th>Variation<span class="unite">vs précédente</span></th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for pesee in pesees %}
-                <tr>
-                    {{ m.cellule_date(pesee) }}
-                    <td>{{ pesee.valeurs[cle]|fr }}</td>
-                    <td>{{ m.variation(pesee.variations[cle]) }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-{% endfor %}
+<!-- Graphique (dessiné par assets/graphique.js) -->
+<h2 id="titreGraphique"></h2>
+<div class="carte carte-graphique">
+    <div class="graphique" id="graphique"></div>
+</div>
+
+<!-- Historique -->
+<h2>Historique</h2>
+<div class="tableau-conteneur">
+    <table id="tableauEvolution"></table>
+</div>
 {% endblock %}
 
 {% block script %}
 <script type="application/json" id="donnees-graphiques">{{ graphiques|tojson }}</script>
 <script src="{{ racine }}assets/graphique.js"></script>
-<script>
-    // Afficher la mesure choisie dans la liste
-    document.getElementById("mesureSelect").addEventListener("change", function () {
-        var sections = document.getElementsByClassName("evolution");
-        for (var i = 0; i < sections.length; i++) {
-            sections[i].hidden = sections[i].id !== this.value;
-        }
-        if (window.dessinerGraphiques) window.dessinerGraphiques();
-    });
-</script>
+<script src="{{ racine }}assets/evolution.js"></script>
 {% endblock %}

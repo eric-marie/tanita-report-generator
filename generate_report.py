@@ -408,20 +408,10 @@ class TanitaReportGenerator:
                      segments=TanitaReportGenerator.SEGMENTS,
                      **self._contexte("details", profil))
 
-        # Statistiques de chaque mesure sur l'ensemble des pesées
-        statistiques = {}
-        for key in TanitaReportGenerator.MESURES:
-            valeurs = [p["valeurs"][key] for p in profil["pesees"] if p["valeurs"][key] != ""]
-            nombres = [n for n in (TanitaReportGenerator._toFloat(v) for v in valeurs) if n is not None]
-            statistiques[key] = {
-                "derniere": valeurs[0] if valeurs else "",
-                "min": TanitaReportGenerator._formatComme(min(nombres), valeurs) if nombres else "",
-                "max": TanitaReportGenerator._formatComme(max(nombres), valeurs) if nombres else "",
-                "total": TanitaReportGenerator._variation(valeurs[0], valeurs[-1]) if len(valeurs) > 1 else None,
-            }
+        # Page d'évolution : la synthèse, les moyennes et l'historique sont calculés dans le
+        # navigateur (assets/evolution.js) à partir des pesées de chaque mesure
         self._render("evolution.html", os.path.join(dossier, "evolution.html"),
                      mesures=TanitaReportGenerator.MESURES,
-                     statistiques=statistiques,
                      graphiques=TanitaReportGenerator._graphiques(profil["pesees"]),
                      **self._contexte("evolution", profil))
 
@@ -504,12 +494,6 @@ class TanitaReportGenerator:
     @staticmethod
     def _decimales(valeur):
         return len(valeur.split(".")[1]) if "." in valeur else 0
-
-    # Formater un nombre avec autant de décimales que les valeurs d'origine
-    @staticmethod
-    def _formatComme(nombre, valeurs):
-        decimales = max(TanitaReportGenerator._decimales(v) for v in valeurs)
-        return f"{nombre:.{decimales}f}"
 
     # Variation entre deux valeurs texte : {"texte": "+0.1", "sens": "hausse|baisse|stable"}
     @staticmethod

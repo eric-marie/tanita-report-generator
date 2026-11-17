@@ -366,6 +366,65 @@ select {
 
 select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+/* Plusieurs sélecteurs côte à côte */
+.outils {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.outils .selecteur { min-width: 0; }
+.outils .selecteur:last-child { min-width: 260px; }
+
+/* Choix exclusif présenté comme des onglets (boutons radio) */
+fieldset.segmente {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+fieldset.segmente legend {
+    padding: 0;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texte-2);
+}
+
+.segmente-options {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--surface-2);
+    border: 1px solid var(--bordure);
+    border-radius: 9px;
+}
+
+.segmente-options label { position: relative; cursor: pointer; }
+
+.segmente-options input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.segmente-options span {
+    display: block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--texte-2);
+    white-space: nowrap;
+}
+
+.segmente-options label:hover span { color: var(--texte); }
+.segmente-options input:checked + span { background: var(--surface); color: var(--texte); box-shadow: var(--ombre); }
+.segmente-options input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+.segmente-options input:disabled + span { opacity: .4; cursor: not-allowed; }
+
 /* --- Page de détails : liste de mesures et segments --------------------------- */
 
 .liste-mesures {
@@ -556,6 +615,10 @@ a.carte-profil:focus-visible { outline: 2px solid var(--accent); outline-offset:
     .page { padding-top: 20px; }
     h1 { font-size: 22px; }
     .selecteur { min-width: 0; width: 100%; }
+    .outils { width: 100%; }
+    .outils .selecteur:last-child { min-width: 0; }
+    .segmente-options label { flex: 1; text-align: center; }
+    .segmente-options span { padding: 6px 4px; }
     .grille-cartes { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .carte { padding: 12px; }
     .carte-valeur { font-size: 22px; }
