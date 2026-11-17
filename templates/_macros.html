@@ -17,6 +17,15 @@
     {%- endif -%}
 {%- endmacro %}
 
+{# Explication des variations : comparaison avec la moyenne des 7 jours qui précèdent la pesée #}
+{% macro note_comparaison(c) -%}
+    {%- if c and c.nb -%}
+        <p class="note note-section">Variations : écart avec {{ "la seule pesée" if c.nb == 1 else "la moyenne des " ~ c.nb ~ " pesées" }} des 7 jours précédant cette pesée (depuis le {{ c.debut }}).</p>
+    {%- elif c -%}
+        <p class="note note-section">Aucune pesée dans les 7 jours précédant cette pesée (depuis le {{ c.debut }}) : pas de variation à afficher.</p>
+    {%- endif -%}
+{%- endmacro %}
+
 {# Valeur suivie de son unité #}
 {% macro valeur(texte, libelle) -%}
     {{ texte|fr }}{% if unite(libelle) %}<span class="unite">{{ unite(libelle) }}</span>{% endif %}

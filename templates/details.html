@@ -37,6 +37,7 @@
 
     <!-- Mesures globales -->
     <h2>Composition globale</h2>
+    {{ m.note_comparaison(pesee.comparaison) }}
     <div class="carte carte-cases">
         <div class="cases">
         {% for groupe in globales %}
@@ -44,7 +45,7 @@
             {% for cle in groupe %}
                 <div class="ligne-mesure{% if not loop.first %} secondaire{% endif %}">
                     <span class="ligne-libelle">{{ nom(cle) }}</span>
-                    <span class="ligne-valeur">{{ m.valeur(pesee.valeurs[cle], cle) }} {{ m.variation(pesee.variations[cle]) }}</span>
+                    <span class="ligne-valeur">{{ m.valeur(pesee.valeurs[cle], cle) }}{% if pesee.comparaison and pesee.comparaison.nb %} {{ m.variation(pesee.variations[cle]) }}{% endif %}</span>
                 </div>
                 {% if descriptions[cle] %}<p class="ligne-description">{{ descriptions[cle] }}</p>{% endif %}
                 {{ m.repere(pesee.reperes.get(cle)) }}

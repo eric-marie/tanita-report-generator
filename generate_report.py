@@ -379,13 +379,8 @@ class TanitaReportGenerator:
         else:
             pesees.reverse()
 
-        # Variation de chaque mesure par rapport à la pesée précédente
-        for i, pesee in enumerate(pesees):
-            precedente = pesees[i + 1] if i + 1 < len(pesees) else None
-            pesee["variations"] = {
-                key: TanitaReportGenerator._variation(pesee["valeurs"][key], precedente["valeurs"][key]) if precedente else None
-                for key in TanitaReportGenerator.MESURES
-            }
+        # Variation de chaque mesure par rapport à la moyenne des pesées des 7 jours qui précèdent
+        TanitaReportGenerator._comparer7Jours(pesees)
         return pesees
 
     # ------------------------------------------------------------------------------------------
@@ -513,31 +508,44 @@ class TanitaReportGenerator:
             tendances[cle] = {"trace": "M" + "L".join(xy(p) for p in points), "nb_jours": len(points)}
         return tendances
 
-    # Variation de la dernière pesée par rapport à la moyenne des pesées des 7 jours glissants
-    # qui la précèdent (de l'instant de la dernière pesée moins 7 jours jusqu'à elle, exclue)
+    # Variations de chaque pesée par rapport à la moyenne des pesées des 7 jours glissants qui la
+    # précèdent (de l'instant de la pesée moins 7 jours jusqu'à elle, exclue ; une pesée faite
+    # quelques minutes plus tôt le même jour en fait partie). Utilisées par les pages Résultats et Détails.
+    # Ajoute à chaque pesée "variations" ({mesure: variation ou None}) et "comparaison"
+    # ({"debut": "07/08/2024 à 16:36", "nb": nombre de pesées de la fenêtre}, ou None sans date lisible).
     @staticmethod
-    def _comparaisonSemaine(pesees, cles):
-        if not pesees or not all(p["moment"] for p in pesees):
-            return None
-        derniere = pesees[0]
-        debut = derniere["moment"] - timedelta(days=7)
-        semaine = [p for p in pesees[1:] if debut <= p["moment"] < derniere["moment"]]
+    def _comparer7Jours(pesees):
+        f = TanitaReportGenerator._toFloat
+        datees = all(p["moment"] for p in pesees)
 
-        comparaison = {"debut": debut.strftime("%d/%m/%Y à %H:%M"), "nb": len(semaine), "variations": {}}
-        for cle in cles:
-            actuelle = TanitaReportGenerator._toFloat(derniere["valeurs"][cle])
-            nombres = [n for n in (TanitaReportGenerator._toFloat(p["valeurs"][cle]) for p in semaine) if n is not None]
-            if actuelle is None or not nombres:
-                comparaison["variations"][cle] = None
+        # Précision de chaque mesure ; une décimale de plus pour les mesures entières (moyenne de 9 et 10)
+        decimales = {cle: max((TanitaReportGenerator._decimales(p["valeurs"][cle]) for p in pesees), default=0)
+                     for cle in TanitaReportGenerator.MESURES}
+
+        for i, pesee in enumerate(pesees):
+            pesee["variations"] = dict.fromkeys(TanitaReportGenerator.MESURES)
+            if not datees:
+                pesee["comparaison"] = None
                 continue
-            # Précision de la balance ; une décimale de plus pour les mesures entières (moyenne de 9 et 10)
-            decimales = max((TanitaReportGenerator._decimales(p["valeurs"][cle]) for p in pesees), default=0)
-            if decimales == 0 and abs(actuelle) < 100:
-                decimales = 1
-            ecart = round(actuelle - sum(nombres) / len(nombres), decimales)
-            comparaison["variations"][cle] = {"texte": "=", "sens": "stable"} if ecart == 0 else \
-                {"texte": f"{ecart:+.{decimales}f}", "sens": "hausse" if ecart > 0 else "baisse"}
-        return comparaison
+            debut = pesee["moment"] - timedelta(days=7)
+            # Les pesées sont de la plus récente à la plus ancienne : la fenêtre suit la pesée i
+            fenetre = []
+            for precedente in pesees[i + 1:]:
+                if precedente["moment"] < debut:
+                    break
+                if precedente["moment"] < pesee["moment"]:
+                    fenetre.append(precedente)
+            pesee["comparaison"] = {"debut": debut.strftime("%d/%m/%Y à %H:%M"), "nb": len(fenetre)}
+
+            for cle in TanitaReportGenerator.MESURES:
+                actuelle = f(pesee["valeurs"][cle])
+                nombres = [n for n in (f(p["valeurs"][cle]) for p in fenetre) if n is not None]
+                if actuelle is None or not nombres:
+                    continue
+                nb_decimales = decimales[cle] if decimales[cle] or abs(actuelle) >= 100 else 1
+                ecart = round(actuelle - sum(nombres) / len(nombres), nb_decimales)
+                pesee["variations"][cle] = {"texte": "=", "sens": "stable"} if ecart == 0 else \
+                    {"texte": f"{ecart:+.{nb_decimales}f}", "sens": "hausse" if ecart > 0 else "baisse"}
 
     # Bilan depuis la première pesée : variation du poids, de la masse grasse et de la masse maigre
     @staticmethod
@@ -634,7 +642,6 @@ class TanitaReportGenerator:
                      cles=cles_resultats,
                      descriptions=TanitaReportGenerator.DESCRIPTIONS,
                      bilan=TanitaReportGenerator._bilan(profil["pesees"]),
-                     semaine=TanitaReportGenerator._comparaisonSemaine(profil["pesees"], cles_resultats),
                      tendances=TanitaReportGenerator._tendances(profil["pesees"], cles_resultats),
                      nb_dernieres=TanitaReportGenerator.NB_DERNIERES_PESEES,
                      **self._contexte("resultats", profil))

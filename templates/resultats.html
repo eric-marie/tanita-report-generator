@@ -22,13 +22,7 @@
 <!-- Mesures de la dernière pesée, regroupées comme sur la page Détails.
      Chaque carte ouvre la page Évolution sur sa mesure principale. -->
 <h2>Dernière pesée</h2>
-<p class="note note-section">
-{% if semaine and semaine.nb %}
-    Variations : écart avec {{ "la seule pesée" if semaine.nb == 1 else "la moyenne des " ~ semaine.nb ~ " pesées" }} des 7 jours précédant la dernière pesée (depuis le {{ semaine.debut }}).
-{% elif semaine %}
-    Aucune pesée dans les 7 jours précédant la dernière pesée (depuis le {{ semaine.debut }}) : pas de variation à afficher.
-{% endif %}
-</p>
+{{ m.note_comparaison(derniere.comparaison) }}
 <div class="grille-cartes grille-cartes-larges">
 {% for groupe in groupes %}
     {% set cle = groupe[0] %}
@@ -36,7 +30,7 @@
     <a class="carte carte-lien" href="evolution.html#mesure={{ cle|urlencode }}" title="Voir l'évolution : {{ nom(cle) }}">
         <div class="carte-libelle">{{ nom(cle) }}</div>
         <div class="carte-valeur">{{ m.valeur(derniere.valeurs[cle], cle) }}</div>
-        {% if semaine and semaine.nb %}<div class="carte-pied">{{ m.variation(semaine.variations[cle]) }}</div>{% endif %}
+        {% if derniere.comparaison and derniere.comparaison.nb %}<div class="carte-pied">{{ m.variation(derniere.variations[cle]) }}</div>{% endif %}
         {% if descriptions[cle] %}<p class="ligne-description">{{ descriptions[cle] }}</p>{% endif %}
         {% if tendance %}
         <svg class="tendance" viewBox="0 0 100 30" preserveAspectRatio="none" role="img"
@@ -51,7 +45,7 @@
         <div class="carte-secondaire">
             <div class="ligne-mesure secondaire">
                 <span class="ligne-libelle">{{ nom(secondaire) }}</span>
-                <span class="ligne-valeur">{{ m.valeur(derniere.valeurs[secondaire], secondaire) }}{% if semaine and semaine.nb %} {{ m.variation(semaine.variations[secondaire]) }}{% endif %}</span>
+                <span class="ligne-valeur">{{ m.valeur(derniere.valeurs[secondaire], secondaire) }}{% if derniere.comparaison and derniere.comparaison.nb %} {{ m.variation(derniere.variations[secondaire]) }}{% endif %}</span>
             </div>
             {{ m.repere(derniere.reperes.get(secondaire)) }}
         </div>
