@@ -317,8 +317,6 @@ h2 {
 .repere-libelle { font-weight: 600; color: var(--texte); }
 .repere-plage { color: var(--texte-3); }
 
-.liste-mesures div { flex-wrap: wrap; }
-.liste-mesures .repere { flex-basis: 100%; justify-content: flex-end; margin-top: 2px; }
 
 .bilan p { margin: 0; color: var(--texte-2); }
 .bilan strong { color: var(--texte); font-variant-numeric: tabular-nums; }
@@ -467,26 +465,39 @@ fieldset.segmente legend {
 
 /* --- Page de détails : liste de mesures et segments --------------------------- */
 
-.liste-mesures {
+/* Grille de cases : chaque case a une bordure à droite et en bas, et la grille déborde
+   d'un pixel à droite et en bas, masqué par la carte (overflow: hidden). Résultat : un seul
+   trait entre deux cases et aucun trait doublé contre le bord de la carte. */
+.carte.carte-cases { padding: 0; overflow: hidden; }
+
+.cases {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 0 24px;
-    margin: 0;
-    padding: 4px 16px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    margin: 0 -1px -1px 0;
 }
 
-.liste-mesures div {
+.case {
+    padding: 12px 16px;
+    border-right: 1px solid var(--bordure);
+    border-bottom: 1px solid var(--bordure);
+}
+
+.ligne-mesure {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--bordure);
 }
 
-.liste-mesures dt { color: var(--texte-2); }
-.liste-mesures dd { margin: 0; font-weight: 600; text-align: right; }
-.liste-mesures dd .unite { font-weight: 400; color: var(--texte-3); margin-left: 2px; }
+.ligne-libelle { color: var(--texte-2); }
+.ligne-valeur { font-weight: 600; text-align: right; white-space: nowrap; }
+.ligne-valeur .unite { font-weight: 400; color: var(--texte-3); margin-left: 2px; }
+
+/* Mesures complémentaires d'une case (ex. masse grasse sous la graisse corporelle) */
+.ligne-mesure.secondaire { margin-top: 6px; font-size: 13px; }
+.ligne-mesure.secondaire .ligne-libelle { color: var(--texte-3); }
+
+.case .repere { justify-content: flex-end; margin-top: 4px; }
 
 .segments {
     display: grid;

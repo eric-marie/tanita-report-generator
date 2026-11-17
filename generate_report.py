@@ -74,21 +74,20 @@ class TanitaReportGenerator:
         "Âge métabolique",
     ]
 
-    # Mesures globales affichées sur la page de détails
+    # Mesures globales affichées sur la page de détails, regroupées par case :
+    # la première mesure de chaque case est la principale, les suivantes la complètent.
+    # Masse maigre = masse musculaire (eau des muscles comprise) + masse osseuse, à l'arrondi près,
+    # puisque pour Tanita poids = masse grasse + masse musculaire + masse osseuse.
     GLOBALES = [
-        "Poids (kg)",
-        "IMC",
-        "Graisse corporelle totale (%)",
-        "Masse musculaire totale (kg)",
-        "Masse osseuse (kg)",
-        "Eau corporelle (%)",
-        "Graisse viscérale",
-        "Apport calorique quotidien (kcal)",
-        "Âge métabolique",
-        "Masse grasse (kg)",
-        "Masse maigre (kg)",
-        "Métabolisme de base (kcal)",
-        "Indice de masse musculaire (kg/m²)",
+        ["Poids (kg)"],
+        ["IMC", "Indice de masse musculaire (kg/m²)"],
+        ["Graisse corporelle totale (%)", "Masse grasse (kg)"],
+        ["Masse maigre (kg)", "Masse musculaire totale (kg)", "Masse osseuse (kg)"],
+        ["Eau corporelle (%)"],
+        ["Graisse viscérale"],
+        ["Apport calorique quotidien (kcal)"],
+        ["Métabolisme de base (kcal)"],
+        ["Âge métabolique"],
     ]
 
     # Segments corporels mesurés par la balance

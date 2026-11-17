@@ -29,7 +29,7 @@
 <h2>Depuis la première pesée</h2>
 <div class="carte bilan">
     <p>Depuis le {{ bilan.depuis }}, le poids a varié de <strong>{{ bilan.poids.texte|fr }} kg</strong>{% if bilan.grasse and bilan.maigre %},
-    dont <strong>{{ bilan.grasse.texte|fr }} kg</strong> de masse grasse et <strong>{{ bilan.maigre.texte|fr }} kg</strong> de masse maigre (muscles, os, eau…){% endif %}.</p>
+    dont <strong>{{ bilan.grasse.texte|fr }} kg</strong> de masse grasse et <strong>{{ bilan.maigre.texte|fr }} kg</strong> de masse maigre (muscles et os){% endif %}.</p>
 </div>
 {% endif %}
 

@@ -107,7 +107,7 @@ Le script ajoute 4 mesures calculées à partir des valeurs de la balance. Elles
 | Mesure | Calcul |
 |---|---|
 | Masse grasse (kg) | poids × graisse corporelle (%) |
-| Masse maigre (kg) | poids − masse grasse (muscles, os, eau…) |
+| Masse maigre (kg) | poids − masse grasse. Pour Tanita, poids = masse grasse + masse musculaire + masse osseuse, et la masse musculaire comprend l'eau des muscles : la masse maigre correspond donc aux muscles et aux os (à l'arrondi près). |
 | Métabolisme de base (kcal) | apport calorique quotidien ÷ facteur d'activité. Le guide donne apport = métabolisme de base × facteur, avec les facteurs de l'OMS : homme 1,55 / 1,78 / 2,10 et femme 1,56 / 1,64 / 1,82 pour les niveaux d'activité 1 / 2 / 3. |
 | Indice de masse musculaire (kg/m²) | masse musculaire ÷ taille², l'indice de muscle selon la taille cité par le guide |
 
@@ -152,7 +152,7 @@ rapport/
 |---|---|
 | `index.html` | Liste des profils trouvés : nom, sexe, âge, taille, dernier poids, date de la dernière pesée et nombre de pesées. Les profils configurés sans pesée y sont signalés. **S'il n'y a qu'un seul profil**, cette page redirige directement vers son rapport. |
 | `profil-n/resultats.html` | Profil, cartes des 9 mesures principales de la dernière pesée avec leur variation et leur repère, répartition de la variation de poids depuis la première pesée (masse grasse / masse maigre), puis tableau de toutes les pesées. |
-| `profil-n/details.html` | Détail d'une pesée choisie dans une liste déroulante : profil, composition globale avec variations, repères et mesures calculées, et répartition de la graisse et du muscle par segment (bras, jambes, buste). |
+| `profil-n/details.html` | Détail d'une pesée choisie dans une liste déroulante : profil, composition globale avec variations, repères et mesures calculées, et répartition de la graisse et du muscle par segment (bras, jambes, buste). La composition globale est une grille de 9 cases ; certaines regroupent une mesure et ses compléments : IMC et indice de masse musculaire ; graisse corporelle (%) et masse grasse (kg) ; masse maigre, masse musculaire et masse osseuse. |
 | `profil-n/evolution.html` | Pour une mesure choisie dans une liste déroulante et une **précision** au choix (mesures, jour, semaine ou mois) : dernière valeur, minimum, maximum, variation totale, **graphique de l'évolution**, puis historique avec la variation entre chaque point. |
 
 Dans les pages d'un profil, l'en-tête affiche le nom du profil, un lien « Changer » vers la page d'accueil (s'il y a plusieurs profils) et la navigation entre les trois pages.

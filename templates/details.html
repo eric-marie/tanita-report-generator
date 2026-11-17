@@ -24,16 +24,20 @@
 
     <!-- Mesures globales -->
     <h2>Composition globale</h2>
-    <div class="carte" style="padding: 0">
-        <dl class="liste-mesures">
-        {% for cle in globales %}
-            <div>
-                <dt>{{ nom(cle) }}</dt>
-                <dd>{{ m.valeur(pesee.valeurs[cle], cle) }} {{ m.variation(pesee.variations[cle]) }}</dd>
+    <div class="carte carte-cases">
+        <div class="cases">
+        {% for groupe in globales %}
+            <div class="case">
+            {% for cle in groupe %}
+                <div class="ligne-mesure{% if not loop.first %} secondaire{% endif %}">
+                    <span class="ligne-libelle">{{ nom(cle) }}</span>
+                    <span class="ligne-valeur">{{ m.valeur(pesee.valeurs[cle], cle) }} {{ m.variation(pesee.variations[cle]) }}</span>
+                </div>
                 {{ m.repere(pesee.reperes.get(cle)) }}
+            {% endfor %}
             </div>
         {% endfor %}
-        </dl>
+        </div>
     </div>
     {% if pesee.reperes %}<p class="note">Repères indicatifs tirés du guide de la balance Tanita. Ils ne remplacent pas l'avis d'un médecin.</p>{% endif %}
 
