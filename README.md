@@ -31,7 +31,8 @@ tanita-report-generator/
 │   └── GRAPHV1/
 │       └── DATA/
 │           └── DATA1.CSV    ← mesures du profil utilisateur n°1
-├── rapport/                 ← pages générées (seul le .gitkeep est versionné)
+├── rapport/                 ← pages générées (ignorées par Git)
+│   └── lib/                 ← copies locales de Bootstrap et jQuery (versionnées)
 ├── templates/
 └── generate_report.py
 ```
@@ -55,7 +56,7 @@ python generate_report.py
 
 ## Fichiers générés
 
-Les trois pages sont créées dans le dossier `rapport/` du projet. Ce dossier est versionné vide grâce à un fichier `.gitkeep`, et le script le recrée s'il a été supprimé. Les pages sont reliées entre elles par une barre de navigation :
+Les trois pages sont créées dans le dossier `rapport/` du projet, à côté du dossier `lib/` qui contient les librairies qu'elles utilisent. Les pages sont reliées entre elles par une barre de navigation :
 
 | Fichier | Contenu |
 |---|---|
@@ -63,8 +64,20 @@ Les trois pages sont créées dans le dossier `rapport/` du projet. Ce dossier e
 | `details.html` | Détail d'une pesée choisie dans une liste déroulante (date et heure). |
 | `evolution.html` | Historique des valeurs d'un indicateur choisi dans une liste déroulante (du poids à l'eau corporelle). |
 
-Il suffit d'ouvrir `rapport/resultats.html` dans un navigateur. Une connexion Internet est nécessaire pour charger Bootstrap et Font Awesome depuis leurs CDN.
+Il suffit d'ouvrir `rapport/resultats.html` dans un navigateur. Aucune connexion Internet n'est nécessaire.
+
+### Librairies locales
+
+Les pages n'utilisent aucun CDN : les librairies sont copiées dans `rapport/lib/` et versionnées avec le projet.
+
+| Fichier | Librairie | Source |
+|---|---|---|
+| `lib/bootstrap/bootstrap.min.css` | Bootstrap 4.5.2 (styles) | `cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/` |
+| `lib/bootstrap/bootstrap.min.js` | Bootstrap 4.5.2 (menu repliable sur petit écran) | `cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/` |
+| `lib/jquery/jquery-3.5.1.slim.min.js` | jQuery 3.5.1 slim, requis par Bootstrap 4 | `code.jquery.com` |
+
+Si le dossier `rapport/lib/` est supprimé, il faut le récupérer depuis Git (`git checkout -- rapport/lib`).
 
 ## Données personnelles
 
-Les pages générées contiennent des données de santé (poids, composition corporelle, âge…). Le contenu du dossier `rapport/` (hormis le `.gitkeep`) est donc **exclu du dépôt** par le `.gitignore`, tout comme le dossier `TANITA`. Seuls le script et les templates sont versionnés.
+Les pages générées contiennent des données de santé (poids, composition corporelle, âge…). Les fichiers HTML du dossier `rapport/` sont donc **exclus du dépôt** par le `.gitignore`, tout comme le dossier `TANITA`. Seuls le script, les templates et les librairies sont versionnés.
