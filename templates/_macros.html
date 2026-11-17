@@ -33,12 +33,12 @@
     {%- set j = jauge_imc(valeur) -%}
     {%- if j -%}
     <div class="jauge-imc" role="meter" aria-valuemin="{{ j.bas }}" aria-valuemax="{{ j.haut }}" aria-valuenow="{{ j.imc }}"
-         aria-label="IMC {{ j.texte }} kg/m² : {{ j.classe.complet }}">
+         aria-label="IMC {{ j.texte }} kg/m² : {{ j.classe.complet }}{% if j.hors_limites %} (hors de la jauge de {{ j.bas }} à {{ j.haut }}){% endif %}">
         <div class="jauge-imc-barre">
         {%- for s in j.segments %}
             <span class="jauge-imc-segment{% if s.numero == j.classe.numero %} actif{% endif %}" style="flex: {{ s.largeur }}; background: var(--imc-{{ s.numero }})" title="{{ s.complet }}"></span>
         {%- endfor %}
-            <span class="jauge-imc-curseur" style="left: {{ '%.2f'|format(j.curseur) }}%"></span>
+            <span class="jauge-imc-curseur{% if j.hors_limites %} hors-limites{% endif %}" style="left: {{ '%.2f'|format(j.curseur) }}%"{% if j.hors_limites %} title="Valeur hors de la jauge ({{ j.bas }} à {{ j.haut }} kg/m²)"{% endif %}></span>
         </div>
         <div class="jauge-imc-graduations" aria-hidden="true">
         {%- for s in j.segments[1:] %}

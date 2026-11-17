@@ -172,6 +172,7 @@ Sur les trois pages, l'IMC est accompagné d'une jauge colorée qui va de 15 à 
 
 - La largeur de chaque classe sur la jauge est proportionnelle à son étendue en kg/m², et les seuils sont gradués sous la jauge.
 - **Pour se repérer** : la classe où se situe la valeur est en couleur pleine et les autres sont atténuées. Un curseur avec une pointe marque la valeur exacte, et le nom de la classe est écrit sous la jauge, la couleur n'étant jamais seule à porter l'information.
+- **Hors de la jauge** (IMC inférieur à 15 ou supérieur à 45) : le curseur reste au bord de la jauge mais passe en rouge. La classe et la valeur affichées restent exactes.
 - Les couleurs suivent une gamme ordonnée : bleu pour la maigreur, vert pour la normale, puis du jaune clair au rouge foncé pour les classes de plus en plus sévères. Les classes voisines restent distinctes, y compris pour les daltoniens. Elles sont définies dans `style.css` (variables `--imc-1` à `--imc-6`, avec une version pour le mode sombre) ; les seuils et les libellés le sont dans `CLASSES_IMC` du script.
 
 ## Fichiers générés

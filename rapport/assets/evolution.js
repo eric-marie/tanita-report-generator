@@ -172,6 +172,7 @@
         var bas = definitionJauge.bas, haut = definitionJauge.haut, segments = definitionJauge.segments;
         var classe = segments.filter(function (s) { return s.numero === 1 || dernier.v >= s.debut; }).pop();
         var curseur = (Math.min(Math.max(dernier.v, bas), haut) - bas) / (haut - bas) * 100;
+        var horsLimites = dernier.v < bas || dernier.v > haut;   // curseur au bord, en rouge
 
         conteneurJauge.appendChild(el("div", "carte-libelle", "Classe d'IMC · " + dernier.texte + " kg/m² (" + dernier.libelle + ")"));
         var jauge = el("div", "jauge-imc");
@@ -179,7 +180,8 @@
         jauge.setAttribute("aria-valuemin", bas);
         jauge.setAttribute("aria-valuemax", haut);
         jauge.setAttribute("aria-valuenow", dernier.v);
-        jauge.setAttribute("aria-label", "IMC " + dernier.texte + " kg/m² : " + classe.complet);
+        jauge.setAttribute("aria-label", "IMC " + dernier.texte + " kg/m² : " + classe.complet +
+            (horsLimites ? " (hors de la jauge de " + bas + " à " + haut + ")" : ""));
 
         var barre = el("div", "jauge-imc-barre");
         segments.forEach(function (s) {
@@ -189,8 +191,9 @@
             seg.title = s.complet;
             barre.appendChild(seg);
         });
-        var marque = el("span", "jauge-imc-curseur");
+        var marque = el("span", "jauge-imc-curseur" + (horsLimites ? " hors-limites" : ""));
         marque.style.left = curseur.toFixed(2) + "%";
+        if (horsLimites) marque.title = "Valeur hors de la jauge (" + bas + " à " + haut + " kg/m²)";
         barre.appendChild(marque);
         jauge.appendChild(barre);
 

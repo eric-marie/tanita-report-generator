@@ -575,8 +575,10 @@ class TanitaReportGenerator:
         if imc is None:
             return None
         classe = next(s for s in reversed(segments) if s["numero"] == 1 or imc >= s["debut"])
+        # Hors de la jauge, le curseur reste au bord mais passe en rouge
         return {"imc": imc, "texte": TanitaReportGenerator._formatFr(valeur), "segments": segments, "classe": classe,
-                "curseur": (min(max(imc, bas), haut) - bas) / (haut - bas) * 100, "bas": bas, "haut": haut}
+                "curseur": (min(max(imc, bas), haut) - bas) / (haut - bas) * 100, "bas": bas, "haut": haut,
+                "hors_limites": imc < bas or imc > haut}
 
     # Bilan depuis la première pesée : variation du poids, de la masse grasse et de la masse maigre
     @staticmethod

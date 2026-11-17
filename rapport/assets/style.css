@@ -419,6 +419,10 @@ h2 {
     border-bottom: 0;
 }
 
+/* Valeur hors de la jauge (moins de 15 ou plus de 45 kg/m²) : curseur au bord, en rouge */
+.jauge-imc-curseur.hors-limites { background: #d03b3b; }
+.jauge-imc-curseur.hors-limites::before { border-top-color: #d03b3b; }
+
 .jauge-imc-graduations {
     position: relative;
     height: 14px;
