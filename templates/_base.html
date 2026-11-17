@@ -3,28 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block html_head_title %}Rapport Tanita{% endblock %} · Rapport Tanita</title>
-    <link href="assets/style.css" rel="stylesheet">
+    <title>{% block html_head_title %}Rapport Tanita{% endblock %}{% if profil %} · {{ profil.nom }}{% endif %} · Rapport Tanita</title>
+    <link href="{{ racine }}assets/style.css" rel="stylesheet">
+    {% block head %}{% endblock %}
 </head>
 <body>
     <!-- En-tête et navigation -->
     <header class="entete">
         <div class="entete-contenu">
-            <a class="marque" href="resultats.html">
-                <span class="marque-logo" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="4"/>
-                        <path d="M8 9.5a5.5 5.5 0 0 1 8 0"/>
-                        <path d="M12 9.5 13.5 7.5"/>
-                    </svg>
+            <div class="entete-gauche">
+                <a class="marque" href="{{ racine }}index.html">
+                    <span class="marque-logo" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="4"/>
+                            <path d="M8 9.5a5.5 5.5 0 0 1 8 0"/>
+                            <path d="M12 9.5 13.5 7.5"/>
+                        </svg>
+                    </span>
+                    Rapport Tanita
+                </a>
+                {% if profil %}
+                <span class="profil-actif">
+                    {{ profil.nom }}
+                    {% if plusieurs_profils %}<a href="{{ racine }}index.html">Changer</a>{% endif %}
                 </span>
-                Rapport Tanita
-            </a>
+                {% endif %}
+            </div>
+            {% if profil %}
             <nav class="navigation" aria-label="Pages du rapport">
             {% for page, libelle in {"resultats": "Résultats", "details": "Détails", "evolution": "Évolution"}.items() %}
                 <a href="{{ page }}.html"{% if active_page == page %} class="actif" aria-current="page"{% endif %}>{{ libelle }}</a>
             {% endfor %}
             </nav>
+            {% endif %}
         </div>
     </header>
 
@@ -38,15 +49,11 @@
             {% block outils %}{% endblock %}
         </div>
 
-        {% if pesees %}
-            {% block content %}{% endblock %}
-        {% else %}
-            <p class="vide">Aucune pesée trouvée dans <code>TANITA/GRAPHV1/DATA/DATA1.CSV</code>.</p>
-        {% endif %}
+        {% block content %}{% endblock %}
     </main>
 
     <footer class="pied">
-        Rapport généré le {{ genere_le }} à partir de {{ pesees|length }} pesée{{ "s" if pesees|length > 1 }}.
+        Rapport généré le {{ genere_le }} à partir de {{ nb_pesees }} pesée{{ "s" if nb_pesees > 1 }}.
     </footer>
 
     {% block script %}{% endblock %}

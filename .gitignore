@@ -1,6 +1,10 @@
 # Copie de la carte SD de la balance : données personnelles
 /TANITA/
 
+# Noms des profils : données personnelles (modèle versionné : profils.example.json)
+/profils.json
+
 # Pages générées : contiennent des données personnelles (mesures de la balance)
 # La feuille de style de rapport/assets/ reste versionnée
 /rapport/*.html
+/rapport/profil-*/

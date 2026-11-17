@@ -20,7 +20,7 @@
 {% block content %}
 {% for pesee in pesees %}
 <section class="detail" id="pesee-{{ loop.index }}"{% if not loop.first %} hidden{% endif %}>
-    {{ m.profil(pesee, profil) }}
+    {{ m.profil(pesee, champs_profil) }}
 
     <!-- Mesures globales -->
     <h2>Composition globale</h2>

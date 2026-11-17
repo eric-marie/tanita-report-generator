@@ -1,0 +1,45 @@
+{% extends "_base.html" %}
+
+{# redirection : renseignée par le script quand il n'y a qu'un seul profil #}
+
+{% block html_head_title %}Profils{% endblock %}
+{% block head %}
+    {% if redirection %}<meta http-equiv="refresh" content="0; url={{ redirection }}">{% endif %}
+{% endblock %}
+{% block header %}Profils{% endblock %}
+{% block sous_titre %}<p class="sous-titre">Profils trouvés sur la carte SD de la balance</p>{% endblock %}
+
+{% block content %}
+{% if redirection %}
+    <p class="vide">Redirection vers <a href="{{ redirection }}">le rapport de {{ profils[0].nom }}</a>…</p>
+{% elif not profils %}
+    <p class="vide">Aucun profil trouvé dans <code>TANITA/GRAPHV1</code>.<br>Copie le dossier <code>TANITA</code> de la carte SD à la racine du projet, puis relance la génération.</p>
+{% else %}
+<div class="grille-profils">
+{% for p in profils %}
+    {% if p.pesees %}
+    <a class="carte carte-profil" href="{{ p.dossier }}/resultats.html">
+    {% else %}
+    <div class="carte carte-profil inactif">
+    {% endif %}
+        <div class="carte-profil-entete">
+            <span class="pastille-numero" aria-hidden="true">{{ p.numero }}</span>
+            <div>
+                <div class="carte-profil-nom">{{ p.nom }}</div>
+                <div class="carte-profil-description">{{ p.description or "Profil " ~ p.numero }}</div>
+            </div>
+        </div>
+        {% if p.pesees %}
+        <dl class="carte-profil-stats">
+            <div><dt>Poids</dt><dd>{{ p.derniere.valeurs["Poids (kg)"]|fr }}<span class="unite">kg</span></dd></div>
+            <div><dt>Dernière pesée</dt><dd>{{ p.derniere.valeurs["Date"] }}</dd></div>
+            <div><dt>Pesées</dt><dd>{{ p.pesees|length }}</dd></div>
+        </dl>
+        {% else %}
+        <p class="carte-profil-vide">Configuré sur la balance, mais aucune pesée enregistrée.</p>
+        {% endif %}
+    {% if p.pesees %}</a>{% else %}</div>{% endif %}
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}
