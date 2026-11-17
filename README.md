@@ -6,7 +6,7 @@ Génère un petit rapport HTML consultable dans un navigateur à partir des mesu
 
 La balance BC-601 enregistre chaque pesée sur une carte SD, dans des fichiers CSV peu lisibles où chaque valeur est précédée d'un code (`Wk,100.1`, `FW,22.1`…). Ce projet transforme ces données brutes en pages HTML claires pour :
 
-- retrouver les différents profils de la balance (jusqu'à 8) ;
+- retrouver les différents profils de la balance (4 sur la BC-601) ;
 - consulter toutes les pesées d'un profil dans un tableau ;
 - voir le détail complet d'une pesée ;
 - suivre l'évolution d'un indicateur dans le temps.
@@ -31,9 +31,9 @@ tanita-report-generator/
 ├── TANITA/                  ← copie de la carte SD (ignorée par Git)
 │   └── GRAPHV1/
 │       ├── SYSTEM/
-│       │   └── PROF1.CSV … PROF8.CSV   ← configuration des profils 1 à 8
+│       │   └── PROF1.CSV … PROF4.CSV   ← configuration des profils 1 à 4 (PROF5 à PROF8 restent vides)
 │       └── DATA/
-│           └── DATA1.CSV … DATA8.CSV   ← pesées des profils 1 à 8
+│           └── DATA1.CSV … DATA4.CSV   ← pesées des profils 1 à 4 (DATA5 à DATA8 restent vides)
 ├── rapport/                 ← pages générées (ignorées par Git)
 │   └── assets/              ← versionné
 │       ├── style.css        ← feuille de style des pages
@@ -52,7 +52,7 @@ tanita-report-generator/
 
 ### Nommer les profils (facultatif)
 
-La balance ne stocke aucun nom : les profils sont seulement numérotés de 1 à 8 et s'affichent par défaut comme « Profil 1 », « Profil 2 »… Pour leur donner un nom, copier le modèle `profils.example.json` en `profils.json` et l'adapter :
+La balance ne stocke aucun nom : les profils sont seulement numérotés de 1 à 4 et s'affichent par défaut comme « Profil 1 », « Profil 2 »… Pour leur donner un nom, copier le modèle `profils.example.json` en `profils.json` et l'adapter :
 
 ```json
 {
@@ -74,16 +74,28 @@ python generate_report.py
 
 ### Ce que fait le script
 
-1. **Il détecte les profils.** Pour chaque numéro de 1 à 8, il regarde deux fichiers de la carte SD :
-   - `SYSTEM/PROFn.CSV` : non vide si le profil est configuré sur la balance (modèle, date de naissance, sexe, taille, niveau d'activité) ;
+1. **Il détecte les profils.** La BC-601 a 4 touches personnelles, donc 4 profils. Pour chaque numéro de 1 à 4, il regarde deux fichiers de la carte SD :
+   - `SYSTEM/PROFn.CSV` : non vide si le profil est configuré sur la balance (modèle, date de naissance, sexe, type de corps, taille, niveau d'activité) ;
    - `DATA/DATAn.CSV` : non vide si le profil a des pesées enregistrées.
 
-   Un profil qui a **au moins une pesée** est considéré comme utilisé et reçoit son propre rapport. Un profil configuré mais sans pesée est seulement signalé sur la page d'accueil. Les autres sont ignorés.
-2. **Il lit les pesées** de chaque profil, une ligne par pesée, et en extrait 26 indicateurs selon leur position dans la ligne : date, heure, sexe, âge, taille, niveau d'activité, poids, IMC, masse grasse (totale et par bras, jambe et buste), masse musculaire (totale et par segment), masse osseuse, graisse viscérale, apport calorique quotidien, âge métabolique et eau corporelle.
+   Un profil qui a **au moins une pesée** est considéré comme utilisé et reçoit son propre rapport. Un profil configuré mais sans pesée est seulement signalé sur la page d'accueil. Les autres sont ignorés. La carte prévoit 8 fichiers de chaque sorte : si l'un des fichiers 5 à 8 n'est pas vide, le script le signale et l'ignore.
+2. **Il lit les pesées** de chaque profil, une ligne par pesée. Chaque valeur est précédée de son code dans le fichier (`Wk,100.1` pour un poids de 100,1 kg) : le script lit les valeurs **par leur code**, pas par leur position, et en extrait 27 indicateurs : date, heure, sexe, âge, taille, niveau d'activité, type de corps, poids, IMC, masse grasse (totale et par bras, jambe et buste), masse musculaire (totale et par segment), masse osseuse, graisse viscérale, apport calorique quotidien, âge métabolique et eau corporelle. Une valeur absente de la ligne reste vide (voir *Contrôles à la lecture*).
 3. **Il calcule les variations.** Les pesées sont classées de la plus récente à la plus ancienne et, pour chaque mesure, il calcule la variation par rapport à la pesée précédente. Pour la page d'évolution, il calcule aussi le minimum, le maximum et la variation totale de chaque mesure, et prépare les points des graphiques (date et heure de chaque pesée, valeur, précision de la mesure).
-4. **Il génère les pages HTML** à partir des templates Jinja2 du dossier `templates/`. Les nombres sont affichés avec une virgule décimale, et le sexe en clair (« Homme » ou « Femme ») au lieu du code de la balance. Les dossiers de profil d'une génération précédente sont supprimés au préalable, pour ne pas garder un profil qui n'existe plus.
+4. **Il génère les pages HTML** à partir des templates Jinja2 du dossier `templates/`. Les nombres sont affichés avec une virgule décimale, et les codes de la balance en clair, d'après le manuel :
+   - sexe : 1 = Homme, 2 = Femme ;
+   - niveau d'activité : 1 = peu ou pas d'exercice, 2 = activité modérée, 3 = activité intense ;
+   - type de corps : 0 = Standard, autre valeur = Athlète (la balance n'a que ces deux types ; en mode athlète, elle fixe le niveau d'activité à 3).
 
-Le script affiche ensuite les profils trouvés et le nombre de pesées de chacun.
+   Les dossiers de profil d'une génération précédente sont supprimés au préalable, pour ne pas garder un profil qui n'existe plus.
+
+Le script affiche ensuite les profils trouvés, le nombre de pesées de chacun, et les remarques éventuelles des contrôles ci-dessous.
+
+### Contrôles à la lecture
+
+- **Somme de contrôle** : chaque ligne de la carte se termine par `CS,xx`, la somme des octets de la ligne jusqu'à la virgule qui précède `CS`, modulo 256, en hexadécimal. Une ligne dont la somme ne correspond pas (ligne abîmée, par exemple si la carte a été retirée pendant une écriture) est ignorée avec un message.
+- **Unités** : la balance peut afficher en kg, en livres ou en stones. Le script vérifie l'unité grâce à l'IMC (poids en kg / taille en m²) : si l'IMC enregistré ne correspond qu'à un poids en livres (et éventuellement une taille en pouces), les masses sont converties en kg et la taille en cm. Si rien ne correspond, les valeurs sont affichées telles quelles avec un avertissement.
+- **Format des dates** : le script détecte le format des dates de chaque fichier (jj/mm/aaaa, mm/jj/aaaa ou aaaa/mm/jj) grâce aux jours supérieurs à 12, et les affiche toujours en jj/mm/aaaa. Si aucune date ne lève l'ambiguïté, jj/mm/aaaa est retenu avec une remarque.
+- **Valeurs absentes** : pour un enfant (5 à 17 ans), la balance ne fournit que le poids, la graisse corporelle et l'IMC. Les autres mesures restent vides dans les pages, et le graphique l'indique. Une ligne sans poids est ignorée.
 
 ## Fichiers générés
 

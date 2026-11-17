@@ -76,10 +76,19 @@
     function dessiner(conteneur) {
         var serie = series[+conteneur.dataset.index];
         var largeur = conteneur.clientWidth;
-        if (!serie || !largeur || !serie.points.length) return;
+        if (!serie || !largeur) return;
         if (conteneur._largeur === largeur) return;
         conteneur._largeur = largeur;
         while (conteneur.firstChild) conteneur.removeChild(conteneur.firstChild);
+
+        // Mesure absente de toutes les pesées (ex. non fournie par la balance pour un enfant)
+        if (!serie.points.length) {
+            var vide = document.createElement("p");
+            vide.className = "graphique-vide";
+            vide.textContent = "Aucune valeur enregistrée pour cette mesure.";
+            conteneur.appendChild(vide);
+            return;
+        }
 
         var points = serie.points;
         var temporel = points.every(function (p) { return p.t !== null; });

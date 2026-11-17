@@ -508,6 +508,7 @@ a.carte-profil:focus-visible { outline: 2px solid var(--accent); outline-offset:
 }
 
 .graphique svg { display: block; overflow: visible; }
+.graphique-vide { margin: 0; padding: 110px 16px; text-align: center; color: var(--texte-3); }
 .graphique svg:focus { outline: none; }
 .graphique svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
 
