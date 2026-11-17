@@ -10,46 +10,81 @@
 {% block content %}
 {{ m.profil(derniere, ["Modèle", "Sexe", "Âge", "Taille (cm)"]) }}
 
-<!-- Mesures principales de la dernière pesée -->
-<h2>Dernière pesée</h2>
-<div class="grille-cartes">
-{% for cle in cles %}
-    <div class="carte">
-        <div class="carte-libelle">{{ nom(cle) }}</div>
-        <div class="carte-valeur">{{ m.valeur(derniere.valeurs[cle], cle) }}</div>
-        <div class="carte-pied">{{ m.variation(derniere.variations[cle]) }}{% if derniere.variations[cle] %} vs précédente{% endif %}</div>
-        {{ m.repere(derniere.reperes.get(cle)) }}
-    </div>
-{% endfor %}
-</div>
-{% if derniere.reperes %}<p class="note">Repères indicatifs tirés du guide de la balance Tanita. Ils ne remplacent pas l'avis d'un médecin.</p>{% endif %}
-
 {% if bilan %}
 <!-- Composition de la variation de poids -->
-<h2>Depuis la première pesée</h2>
 <div class="carte bilan">
-    <p>Depuis le {{ bilan.depuis }}, le poids a varié de <strong>{{ bilan.poids.texte|fr }} kg</strong>{% if bilan.grasse and bilan.maigre %},
+    <p><span class="bilan-titre">Depuis la première pesée</span>
+    Depuis le {{ bilan.depuis }}, le poids a varié de <strong>{{ bilan.poids.texte|fr }} kg</strong>{% if bilan.grasse and bilan.maigre %},
     dont <strong>{{ bilan.grasse.texte|fr }} kg</strong> de masse grasse et <strong>{{ bilan.maigre.texte|fr }} kg</strong> de masse maigre (muscles et os){% endif %}.</p>
 </div>
 {% endif %}
 
-<!-- Historique complet -->
-<h2>Toutes les pesées</h2>
+<!-- Mesures de la dernière pesée, regroupées comme sur la page Détails.
+     Chaque carte ouvre la page Évolution sur sa mesure principale. -->
+<h2>Dernière pesée</h2>
+<p class="note note-section">
+{% if semaine and semaine.nb %}
+    Variations : écart avec la moyenne {{ "de la pesée" if semaine.nb == 1 else "des " ~ semaine.nb ~ " pesées" }} de la semaine précédente (du {{ semaine.debut }} au {{ semaine.fin }}).
+{% elif semaine %}
+    Aucune pesée la semaine précédente (du {{ semaine.debut }} au {{ semaine.fin }}) : pas de variation à afficher.
+{% endif %}
+</p>
+<div class="grille-cartes grille-cartes-larges">
+{% for groupe in groupes %}
+    {% set cle = groupe[0] %}
+    {% set tendance = tendances.get(cle) %}
+    <a class="carte carte-lien" href="evolution.html#mesure={{ cle|urlencode }}" title="Voir l'évolution : {{ nom(cle) }}">
+        <div class="carte-libelle">{{ nom(cle) }}</div>
+        <div class="carte-valeur">{{ m.valeur(derniere.valeurs[cle], cle) }}</div>
+        {% if semaine and semaine.nb %}<div class="carte-pied">{{ m.variation(semaine.variations[cle]) }}</div>{% endif %}
+        {% if descriptions[cle] %}<p class="ligne-description">{{ descriptions[cle] }}</p>{% endif %}
+        {% if tendance %}
+        <svg class="tendance" viewBox="0 0 100 30" preserveAspectRatio="none" role="img"
+             aria-label="Tendance sur {{ tendance.nb_jours }} jours de pesée (moyenne par jour)">
+            <path d="{{ tendance.trace }}" vector-effect="non-scaling-stroke"/>
+        </svg>
+        {% endif %}
+        {{ m.repere(derniere.reperes.get(cle)) }}
+
+        {# Mesures complémentaires de la case (ex. masse grasse sous la graisse corporelle) #}
+        {% for secondaire in groupe[1:] %}
+        <div class="carte-secondaire">
+            <div class="ligne-mesure secondaire">
+                <span class="ligne-libelle">{{ nom(secondaire) }}</span>
+                <span class="ligne-valeur">{{ m.valeur(derniere.valeurs[secondaire], secondaire) }}{% if semaine and semaine.nb %} {{ m.variation(semaine.variations[secondaire]) }}{% endif %}</span>
+            </div>
+            {{ m.repere(derniere.reperes.get(secondaire)) }}
+        </div>
+        {% endfor %}
+    </a>
+{% endfor %}
+</div>
+<p class="note">
+    {% if tendances.values()|select|list %}Mini-courbes : moyenne par jour sur les {{ tendances.values()|select|map(attribute="nb_jours")|max }} derniers jours de pesée. {% endif %}
+    Cliquez sur une mesure pour voir son évolution.
+    {% if derniere.reperes %}Repères indicatifs tirés du guide de la balance Tanita ; ils ne remplacent pas l'avis d'un médecin.{% endif %}
+</p>
+
+<!-- Dernières pesées (l'historique complet est sur la page Évolution) -->
+<div class="titre-section">
+    <h2>Dernières pesées</h2>
+    <a class="lien-section" href="evolution.html#precision=mesures">Tout l'historique dans Évolution →</a>
+</div>
 <div class="tableau-conteneur">
     <table>
         <thead>
             <tr>
                 <th>Date</th>
-            {% for cle in mesures %}
+            {% for cle in cles %}
                 <th>{{ nom(cle) }}{% if unite(cle) %}<span class="unite">{{ unite(cle) }}</span>{% endif %}</th>
             {% endfor %}
             </tr>
         </thead>
         <tbody>
-        {% for pesee in pesees %}
+        {% for pesee in pesees[:nb_dernieres] %}
             <tr>
                 {{ m.cellule_date(pesee) }}
-            {% for cle in mesures %}
+            {% for cle in cles %}
                 <td>{{ pesee.valeurs[cle]|fr }}</td>
             {% endfor %}
             </tr>
@@ -57,4 +92,5 @@
         </tbody>
     </table>
 </div>
+{% if pesees|length > nb_dernieres %}<p class="note">{{ nb_dernieres }} pesées sur {{ pesees|length }}.</p>{% endif %}
 {% endblock %}

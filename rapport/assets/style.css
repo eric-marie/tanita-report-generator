@@ -318,8 +318,53 @@ h2 {
 .repere-plage { color: var(--texte-3); }
 
 
+.bilan { margin-top: 16px; }
 .bilan p { margin: 0; color: var(--texte-2); }
 .bilan strong { color: var(--texte); font-variant-numeric: tabular-nums; }
+.bilan-titre { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 650; color: var(--texte); }
+
+/* Carte cliquable (ouvre la page Évolution sur sa mesure) */
+.carte-lien {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color .15s, transform .15s;
+}
+
+.carte-lien:hover { border-color: var(--accent); transform: translateY(-1px); }
+.carte-lien:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Mini-courbe de tendance dans une carte */
+.tendance {
+    display: block;
+    width: 100%;
+    height: 30px;
+    margin-top: 10px;
+    overflow: visible;
+}
+
+/* Cartes plus larges (page Résultats : cartes avec mesures complémentaires) */
+.grille-cartes.grille-cartes-larges { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+
+/* Mesures complémentaires d'une carte, sous un trait fin */
+.carte-secondaire { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--bordure); }
+.carte-secondaire + .carte-secondaire { margin-top: 6px; padding-top: 0; border-top: 0; }
+.carte-secondaire .repere { justify-content: flex-end; margin-top: 4px; }
+.note-section { margin: -4px 0 12px; }
+
+.tendance path { fill: none; stroke: var(--serie); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+
+/* Titre de section avec un lien à droite */
+.titre-section {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.lien-section { font-size: 13px; color: var(--accent); text-decoration: none; }
+.lien-section:hover { text-decoration: underline; }
 
 /* --- Tableaux ---------------------------------------------------------------- */
 
@@ -692,6 +737,7 @@ a.carte-profil:focus-visible { outline: 2px solid var(--accent); outline-offset:
     .segmente-options label { flex: 1; text-align: center; }
     .segmente-options span { padding: 6px 4px; }
     .grille-cartes { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .grille-cartes.grille-cartes-larges { grid-template-columns: 1fr; }
     .carte { padding: 12px; }
     .carte-valeur { font-size: 22px; }
     .segments {

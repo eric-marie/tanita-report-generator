@@ -216,12 +216,29 @@
             (rendu.repereVisible ? "" : " (hors de la zone affichée)") : "";
     }
 
+    // Choix initial lu dans l'adresse, ex. evolution.html#mesure=Poids%20(kg)&precision=semaine
+    // (liens des cartes de la page Résultats), puis tenu à jour quand on change de choix
+    var parametres = new URLSearchParams(location.hash.slice(1));
+    var mesureDemandee = parametres.get("mesure");
+    if (mesureDemandee) {
+        var option = Array.prototype.find.call(selectMesure.options, function (o) { return o.text === mesureDemandee; });
+        if (option) selectMesure.value = option.value;
+    }
+    if (LIBELLES_PERIODE[parametres.get("precision")]) etat.precision = parametres.get("precision");
+
+    function memoriserChoix() {
+        var p = new URLSearchParams();
+        p.set("mesure", selectMesure.options[selectMesure.selectedIndex].text);
+        p.set("precision", etat.precision);
+        history.replaceState(null, "", "#" + p.toString());
+    }
+
     // Sans date lisible, seules les pesées brutes peuvent être affichées
     var datesLisibles = series.every(function (s) { return s.points.every(function (p) { return p.t !== null; }); });
     radios.forEach(function (radio) {
         if (!datesLisibles && radio.value !== "mesures") radio.disabled = true;
         radio.addEventListener("change", function () {
-            if (this.checked) { etat.precision = this.value; afficher(); }
+            if (this.checked) { etat.precision = this.value; memoriserChoix(); afficher(); }
         });
     });
     if (!datesLisibles) etat.precision = "mesures";
@@ -229,6 +246,7 @@
 
     selectMesure.addEventListener("change", function () {
         etat.mesure = +this.value;
+        memoriserChoix();
         afficher();
     });
     etat.mesure = +selectMesure.value;

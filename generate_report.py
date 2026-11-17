@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from jinja2 import Environment, FileSystemLoader
 
 class TanitaReportGenerator:
@@ -61,20 +61,10 @@ class TanitaReportGenerator:
     # Mesures que le guide ne donne que pour les adultes (18 à 99 ans)
     CODES_ADULTES = ["mW", "mr", "ml", "mR", "mL", "mT", "bW", "rD", "rA", "ww"]
 
-    # Mesures mises en avant sur la page de résultats
-    CLES = [
-        "Poids (kg)",
-        "IMC",
-        "Graisse corporelle totale (%)",
-        "Masse grasse (kg)",
-        "Masse musculaire totale (kg)",
-        "Graisse viscérale",
-        "Eau corporelle (%)",
-        "Masse osseuse (kg)",
-        "Âge métabolique",
-    ]
+    # Nombre de pesées du tableau « Dernières pesées » de la page de résultats
+    NB_DERNIERES_PESEES = 10
 
-    # Mesures globales affichées sur la page de détails, regroupées par case :
+    # Mesures globales des pages de résultats (cartes) et de détails (cases), regroupées :
     # la première mesure de chaque case est la principale, les suivantes la complètent.
     # Masse maigre = masse musculaire (eau des muscles comprise) + masse osseuse, à l'arrondi près,
     # puisque pour Tanita poids = masse grasse + masse musculaire + masse osseuse.
@@ -484,6 +474,73 @@ class TanitaReportGenerator:
 
         return reperes
 
+    # Mini-courbes de tendance de la page de résultats : moyenne par jour des derniers jours de pesée,
+    # sous forme de tracé SVG dans un cadre de 100 × 30 (None s'il y a moins de 2 jours)
+    NB_JOURS_TENDANCE = 60
+
+    @staticmethod
+    def _tendances(pesees, cles):
+        if not all(p["moment"] for p in pesees):
+            return {}
+        jours = {}
+        for pesee in pesees:
+            jours.setdefault(pesee["moment"].date(), []).append(pesee)
+        dates = sorted(jours)[-TanitaReportGenerator.NB_JOURS_TENDANCE:]
+
+        tendances = {}
+        for cle in cles:
+            points = []
+            for jour in dates:
+                nombres = [n for n in (TanitaReportGenerator._toFloat(p["valeurs"][cle]) for p in jours[jour]) if n is not None]
+                if nombres:
+                    points.append((jour.toordinal(), sum(nombres) / len(nombres)))
+            if len(points) < 2:
+                tendances[cle] = None
+                continue
+            x_min, x_max = points[0][0], points[-1][0]
+            v_min, v_max = min(v for _, v in points), max(v for _, v in points)
+            # Comme pour le graphique d'évolution, l'étendue verticale couvre au moins 10 fois la
+            # précision de la balance : une moyenne de 3,75 kg au lieu de 3,8 kg ne fait pas un pic
+            decimales = max((TanitaReportGenerator._decimales(p["valeurs"][cle]) for p in pesees), default=0)
+            etendue_min = 10 * 10 ** -decimales
+            if v_max - v_min < etendue_min:
+                centre = (v_min + v_max) / 2
+                v_min, v_max = centre - etendue_min / 2, centre + etendue_min / 2
+            def xy(point):
+                x = (point[0] - x_min) / (x_max - x_min) * 100
+                y = 27 - (point[1] - v_min) / (v_max - v_min) * 24
+                return f"{x:.1f},{y:.1f}"
+            tendances[cle] = {"trace": "M" + "L".join(xy(p) for p in points), "nb_jours": len(points)}
+        return tendances
+
+    # Variation de la dernière pesée par rapport à la moyenne des pesées de la semaine calendaire
+    # précédente (du lundi au dimanche, comme la précision « Semaine » de la page d'évolution)
+    @staticmethod
+    def _comparaisonSemaine(pesees, cles):
+        if not pesees or not all(p["moment"] for p in pesees):
+            return None
+        derniere = pesees[0]
+        lundi = derniere["moment"].date() - timedelta(days=derniere["moment"].weekday())
+        debut = lundi - timedelta(days=7)
+        semaine = [p for p in pesees if debut <= p["moment"].date() < lundi]
+
+        comparaison = {"debut": debut.strftime("%d/%m/%Y"), "fin": (lundi - timedelta(days=1)).strftime("%d/%m/%Y"),
+                       "nb": len(semaine), "variations": {}}
+        for cle in cles:
+            actuelle = TanitaReportGenerator._toFloat(derniere["valeurs"][cle])
+            nombres = [n for n in (TanitaReportGenerator._toFloat(p["valeurs"][cle]) for p in semaine) if n is not None]
+            if actuelle is None or not nombres:
+                comparaison["variations"][cle] = None
+                continue
+            # Précision de la balance ; une décimale de plus pour les mesures entières (moyenne de 9 et 10)
+            decimales = max((TanitaReportGenerator._decimales(p["valeurs"][cle]) for p in pesees), default=0)
+            if decimales == 0 and abs(actuelle) < 100:
+                decimales = 1
+            ecart = round(actuelle - sum(nombres) / len(nombres), decimales)
+            comparaison["variations"][cle] = {"texte": "=", "sens": "stable"} if ecart == 0 else \
+                {"texte": f"{ecart:+.{decimales}f}", "sens": "hausse" if ecart > 0 else "baisse"}
+        return comparaison
+
     # Bilan depuis la première pesée : variation du poids, de la masse grasse et de la masse maigre
     @staticmethod
     def _bilan(pesees):
@@ -572,10 +629,16 @@ class TanitaReportGenerator:
         dossier = os.path.join(self.output_dir, profil["dossier"])
         os.makedirs(dossier, exist_ok=True)
 
+        # Résultats : mêmes cases que la composition globale de la page de détails
+        cles_resultats = [cle for groupe in TanitaReportGenerator.GLOBALES for cle in groupe]
         self._render("resultats.html", os.path.join(dossier, "resultats.html"),
-                     cles=TanitaReportGenerator.CLES,
-                     mesures=TanitaReportGenerator.MESURES,
+                     groupes=TanitaReportGenerator.GLOBALES,
+                     cles=cles_resultats,
+                     descriptions=TanitaReportGenerator.DESCRIPTIONS,
                      bilan=TanitaReportGenerator._bilan(profil["pesees"]),
+                     semaine=TanitaReportGenerator._comparaisonSemaine(profil["pesees"], cles_resultats),
+                     tendances=TanitaReportGenerator._tendances(profil["pesees"], cles_resultats),
+                     nb_dernieres=TanitaReportGenerator.NB_DERNIERES_PESEES,
                      **self._contexte("resultats", profil))
 
         self._render("details.html", os.path.join(dossier, "details.html"),

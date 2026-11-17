@@ -102,7 +102,7 @@ Le script affiche ensuite les profils trouvés, le nombre de pesées de chacun, 
 
 ### Mesures calculées
 
-Le script ajoute 4 mesures calculées à partir des valeurs de la balance. Elles apparaissent comme les autres dans les pages (cartes, détails, tableau, évolution) :
+Le script ajoute 4 mesures calculées à partir des valeurs de la balance. Elles apparaissent comme les autres dans les pages (cartes, détails, évolution) :
 
 | Mesure | Calcul |
 |---|---|
@@ -151,13 +151,29 @@ rapport/
 | Fichier | Contenu |
 |---|---|
 | `index.html` | Liste des profils trouvés : nom, sexe, âge, taille, dernier poids, date de la dernière pesée et nombre de pesées. Les profils configurés sans pesée y sont signalés. **S'il n'y a qu'un seul profil**, cette page redirige directement vers son rapport. |
-| `profil-n/resultats.html` | Profil, cartes des 9 mesures principales de la dernière pesée avec leur variation et leur repère, répartition de la variation de poids depuis la première pesée (masse grasse / masse maigre), puis tableau de toutes les pesées. |
+| `profil-n/resultats.html` | Tableau de bord de la dernière pesée (voir *Page Résultats*). |
 | `profil-n/details.html` | Détail d'une pesée choisie dans une liste déroulante : profil (avec, en dessous, la définition du manuel pour le niveau d'activité et le type de corps de la pesée), composition globale avec variations, repères et mesures calculées, et répartition de la graisse et du muscle par segment (bras, jambes, buste). La composition globale est une grille de 9 cases ; certaines regroupent une mesure et ses compléments : IMC et indice de masse musculaire ; graisse corporelle (%) et masse grasse (kg) ; masse maigre, masse musculaire et masse osseuse. L'apport calorique quotidien et le métabolisme de base ont une courte explication en dessous (calories à consommer par jour pour garder ce poids ; énergie dépensée au repos complet). |
 | `profil-n/evolution.html` | Pour une mesure choisie dans une liste déroulante et une **précision** au choix (mesures, jour, semaine ou mois) : dernière valeur, minimum, maximum, variation totale, **graphique de l'évolution**, puis historique avec la variation entre chaque point. |
 
 Dans les pages d'un profil, l'en-tête affiche le nom du profil, un lien « Changer » vers la page d'accueil (s'il y a plusieurs profils) et la navigation entre les trois pages.
 
 Il suffit d'ouvrir `rapport/index.html` dans un navigateur. Aucune connexion Internet n'est nécessaire.
+
+### Page Résultats
+
+De haut en bas :
+
+1. **Profil** : modèle, sexe, âge, taille.
+2. **Bilan depuis la première pesée** : variation du poids et sa répartition entre masse grasse et masse maigre (muscles et os).
+3. **Cartes de la dernière pesée**, regroupées comme les cases de la page Détails : poids ; IMC et indice de masse musculaire ; graisse corporelle (%) et masse grasse (kg) ; masse maigre, masse musculaire et masse osseuse ; eau corporelle ; graisse viscérale ; apport calorique quotidien ; métabolisme de base ; âge métabolique. Chaque carte affiche :
+   - la **variation par rapport à la moyenne des pesées de la semaine précédente** (semaine calendaire du lundi au dimanche, comme la précision « Semaine » de la page Évolution). S'il n'y a eu aucune pesée cette semaine-là, la page le signale et n'affiche pas de variation. Les mesures entières (graisse viscérale, âge métabolique) gagnent une décimale, puisqu'on les compare à une moyenne ;
+   - une **mini-courbe de tendance** : moyenne par jour sur les 60 derniers jours de pesée, affichée à partir de 2 jours. Comme pour le graphique d'évolution, son échelle couvre au moins 10 fois la précision de la balance, pour qu'une infime variation ne fasse pas un pic ;
+   - le **repère** du guide Tanita le cas échéant.
+
+   Un clic sur une carte ouvre la page Évolution sur sa mesure principale (lien `evolution.html#mesure=…`).
+4. **Dernières pesées** : les 10 dernières pesées avec les mesures des cartes, et un lien vers l'historique complet de la page Évolution (précision « Mesures »).
+
+La page Évolution lit aussi l'adresse (`#mesure=Poids%20(kg)&precision=semaine`) et la met à jour quand on change de mesure ou de précision : on peut donc garder un lien vers un affichage précis.
 
 ### Mise en forme
 
