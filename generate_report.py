@@ -3,6 +3,7 @@ import json
 import os
 import re
 import shutil
+import sys
 from datetime import date, datetime
 from jinja2 import Environment, FileSystemLoader
 
@@ -342,6 +343,12 @@ class TanitaReportGenerator:
     def _unite(libelle):
         trouve = re.search(r"\(([^)]*)\)$", libelle)
         return trouve.group(1) if trouve else ""
+
+# Écrire les messages en UTF-8 : sous Windows, quand la sortie n'est pas la console Windows
+# (terminal Git Bash, par exemple), Python utilise sinon l'encodage cp1252 et les accents
+# s'affichent mal. PYTHONIOENCODING, s'il est défini, reste prioritaire.
+if not os.environ.get("PYTHONIOENCODING") and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 generator = TanitaReportGenerator()
 generator.generateHtmlFiles()
