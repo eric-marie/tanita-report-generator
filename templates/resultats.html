@@ -31,6 +31,7 @@
         <div class="carte-libelle">{{ nom(cle) }}</div>
         <div class="carte-valeur">{{ m.valeur(derniere.valeurs[cle], cle) }}</div>
         {% if derniere.comparaison and derniere.comparaison.nb %}<div class="carte-pied">{{ m.variation(derniere.variations[cle]) }}</div>{% endif %}
+        {% if cle == "IMC" %}{{ m.jauge_imc_html(derniere.valeurs[cle]) }}{% endif %}
         {% if descriptions[cle] %}<p class="ligne-description">{{ descriptions[cle] }}</p>{% endif %}
         {% if tendance %}
         <svg class="tendance" viewBox="0 0 100 30" preserveAspectRatio="none" role="img"

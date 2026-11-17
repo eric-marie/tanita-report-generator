@@ -158,6 +158,60 @@
               points.length > 1 ? "depuis " + points[0].libelle : "un seul point");
     }
 
+    // Jauge colorée de l'IMC pour la dernière valeur affichée : même construction que la macro
+    // jauge_imc_html des templates (classes et seuils transmis par le script Python)
+    var definitionJauge = JSON.parse((document.getElementById("jauge-imc-definition") || {}).textContent || "null");
+    var conteneurJauge = document.getElementById("jaugeImc");
+
+    function remplirJaugeImc(serie, brute) {
+        conteneurJauge.textContent = "";
+        var dernier = serie.points[serie.points.length - 1];
+        conteneurJauge.hidden = !definitionJauge || brute.nom !== "IMC" || !dernier;
+        if (conteneurJauge.hidden) return;
+
+        var bas = definitionJauge.bas, haut = definitionJauge.haut, segments = definitionJauge.segments;
+        var classe = segments.filter(function (s) { return s.numero === 1 || dernier.v >= s.debut; }).pop();
+        var curseur = (Math.min(Math.max(dernier.v, bas), haut) - bas) / (haut - bas) * 100;
+
+        conteneurJauge.appendChild(el("div", "carte-libelle", "Classe d'IMC · " + dernier.texte + " kg/m² (" + dernier.libelle + ")"));
+        var jauge = el("div", "jauge-imc");
+        jauge.setAttribute("role", "meter");
+        jauge.setAttribute("aria-valuemin", bas);
+        jauge.setAttribute("aria-valuemax", haut);
+        jauge.setAttribute("aria-valuenow", dernier.v);
+        jauge.setAttribute("aria-label", "IMC " + dernier.texte + " kg/m² : " + classe.complet);
+
+        var barre = el("div", "jauge-imc-barre");
+        segments.forEach(function (s) {
+            var seg = el("span", "jauge-imc-segment" + (s.numero === classe.numero ? " actif" : ""));
+            seg.style.flex = s.largeur;
+            seg.style.background = "var(--imc-" + s.numero + ")";
+            seg.title = s.complet;
+            barre.appendChild(seg);
+        });
+        var marque = el("span", "jauge-imc-curseur");
+        marque.style.left = curseur.toFixed(2) + "%";
+        barre.appendChild(marque);
+        jauge.appendChild(barre);
+
+        var graduations = el("div", "jauge-imc-graduations");
+        graduations.setAttribute("aria-hidden", "true");
+        segments.slice(1).forEach(function (s) {
+            var g = el("span", "", s.graduation);
+            g.style.left = s.position.toFixed(2) + "%";
+            graduations.appendChild(g);
+        });
+        jauge.appendChild(graduations);
+
+        var nomClasse = el("div", "jauge-imc-classe");
+        var pastilleClasse = el("span", "jauge-imc-pastille");
+        pastilleClasse.style.background = "var(--imc-" + classe.numero + ")";
+        nomClasse.appendChild(pastilleClasse);
+        nomClasse.appendChild(document.createTextNode(classe.complet));
+        jauge.appendChild(nomClasse);
+        conteneurJauge.appendChild(jauge);
+    }
+
     // Historique, du plus récent au plus ancien
     function remplirTableau(serie, precision) {
         tableau.textContent = "";
@@ -202,6 +256,7 @@
         titre.textContent = brute.nom + (brute.unite ? " (" + brute.unite + ")" : "") +
             (etat.precision === "mesures" ? "" : " · moyenne par " + { jour: "jour", semaine: "semaine", mois: "mois" }[etat.precision]);
         remplirCartes(etat.serie);
+        remplirJaugeImc(etat.serie, brute);
         remplirTableau(etat.serie, etat.precision);
         dessinerGraphique();
     }

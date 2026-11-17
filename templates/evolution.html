@@ -31,6 +31,9 @@
 <!-- Synthèse (remplie par assets/evolution.js) -->
 <div class="grille-cartes" id="cartesEvolution"></div>
 
+<!-- Jauge d'IMC de la dernière valeur (affichée seulement pour l'IMC) -->
+<div class="carte carte-jauge-imc" id="jaugeImc" hidden></div>
+
 <!-- Graphique (dessiné par assets/graphique.js) -->
 <h2 id="titreGraphique"></h2>
 <div class="carte carte-graphique">
@@ -47,6 +50,7 @@
 
 {% block script %}
 <script type="application/json" id="donnees-graphiques">{{ graphiques|tojson }}</script>
+<script type="application/json" id="jauge-imc-definition">{{ jauge_imc_definition|tojson }}</script>
 <script src="{{ racine }}assets/graphique.js"></script>
 <script src="{{ racine }}assets/evolution.js"></script>
 {% endblock %}

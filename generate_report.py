@@ -147,6 +147,18 @@ class TanitaReportGenerator:
     # Eau corporelle moyenne d'un adulte en bonne santé (%)
     PLAGES_EAU = {"1": (50, 65), "2": (45, 60)}
 
+    # Classes d'IMC (kg/m²) de la jauge colorée : (borne inférieure, libellé court, libellé complet).
+    # La jauge va de 15 à 45 kg/m² ; les couleurs sont les variables CSS --imc-1 à --imc-6.
+    JAUGE_IMC = (15, 45)
+    CLASSES_IMC = [
+        (None, "Insuffisance pondérale", "Insuffisance pondérale (maigreur ou dénutrition)"),
+        (18.5, "Corpulence normale", "Corpulence normale (poids idéal)"),
+        (25.0, "Surpoids", "Surpoids"),
+        (30.0, "Obésité modérée (classe I)", "Obésité modérée (classe I)"),
+        (35.0, "Obésité sévère (classe II)", "Obésité sévère (classe II)"),
+        (40.0, "Obésité massive (classe III)", "Obésité massive ou morbide (classe III)"),
+    ]
+
     # Graisse viscérale : 1 à 12 = niveau sain, 13 à 59 = excès
     VISCERALE_SAINE = (1, 12)
 
@@ -176,6 +188,7 @@ class TanitaReportGenerator:
         self.env.filters["fr"] = TanitaReportGenerator._formatFr
         self.env.globals["nom"] = TanitaReportGenerator._nom
         self.env.globals["unite"] = TanitaReportGenerator._unite
+        self.env.globals["jauge_imc"] = TanitaReportGenerator._jaugeImc
 
     # Lire les noms donnés aux profils dans profils.json (facultatif), ex. {"1": "Éric"}
     def _chargerNoms(self):
@@ -547,6 +560,24 @@ class TanitaReportGenerator:
                 pesee["variations"][cle] = {"texte": "=", "sens": "stable"} if ecart == 0 else \
                     {"texte": f"{ecart:+.{nb_decimales}f}", "sens": "hausse" if ecart > 0 else "baisse"}
 
+    # Jauge d'IMC : segments (proportionnels à la largeur de chaque classe entre 15 et 45 kg/m²),
+    # classe de la valeur et position du curseur en %. None si la valeur n'est pas un nombre.
+    @staticmethod
+    def _jaugeImc(valeur):
+        imc = TanitaReportGenerator._toFloat(valeur)
+        bas, haut = TanitaReportGenerator.JAUGE_IMC
+        bornes = [bas] + [c[0] for c in TanitaReportGenerator.CLASSES_IMC[1:]] + [haut]
+        segments = []
+        for i, (_, court, complet) in enumerate(TanitaReportGenerator.CLASSES_IMC):
+            segments.append({"numero": i + 1, "court": court, "complet": complet, "debut": bornes[i], "fin": bornes[i + 1],
+                             "largeur": bornes[i + 1] - bornes[i], "position": (bornes[i] - bas) / (haut - bas) * 100,
+                             "graduation": f"{bornes[i]:g}".replace(".", ",")})
+        if imc is None:
+            return None
+        classe = next(s for s in reversed(segments) if s["numero"] == 1 or imc >= s["debut"])
+        return {"imc": imc, "texte": TanitaReportGenerator._formatFr(valeur), "segments": segments, "classe": classe,
+                "curseur": (min(max(imc, bas), haut) - bas) / (haut - bas) * 100, "bas": bas, "haut": haut}
+
     # Bilan depuis la première pesée : variation du poids, de la masse grasse et de la masse maigre
     @staticmethod
     def _bilan(pesees):
@@ -656,7 +687,10 @@ class TanitaReportGenerator:
 
         # Page d'évolution : la synthèse, les moyennes et l'historique sont calculés dans le
         # navigateur (assets/evolution.js) à partir des pesées de chaque mesure
+        # Définition de la jauge d'IMC pour le JavaScript (mêmes classes que les autres pages)
+        jauge = TanitaReportGenerator._jaugeImc(str(TanitaReportGenerator.JAUGE_IMC[0]))
         self._render("evolution.html", os.path.join(dossier, "evolution.html"),
+                     jauge_imc_definition={"bas": jauge["bas"], "haut": jauge["haut"], "segments": jauge["segments"]},
                      mesures=TanitaReportGenerator.MESURES,
                      graphiques=TanitaReportGenerator._graphiques(profil["pesees"]),
                      **self._contexte("evolution", profil))

@@ -47,6 +47,7 @@
                     <span class="ligne-libelle">{{ nom(cle) }}</span>
                     <span class="ligne-valeur">{{ m.valeur(pesee.valeurs[cle], cle) }}{% if pesee.comparaison and pesee.comparaison.nb %} {{ m.variation(pesee.variations[cle]) }}{% endif %}</span>
                 </div>
+                {% if cle == "IMC" %}{{ m.jauge_imc_html(pesee.valeurs[cle]) }}{% endif %}
                 {% if descriptions[cle] %}<p class="ligne-description">{{ descriptions[cle] }}</p>{% endif %}
                 {{ m.repere(pesee.reperes.get(cle)) }}
             {% endfor %}

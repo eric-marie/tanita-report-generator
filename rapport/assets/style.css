@@ -14,6 +14,13 @@
     --accent: #2f6fde;
     --accent-doux: #e7effd;
     --serie: #2f6fde;        /* couleur des courbes (validée contre le fond, voir README) */
+    /* Classes d'IMC : maigreur, normale, puis gravité croissante du clair au foncé */
+    --imc-1: #2a78d6;
+    --imc-2: #1f9d3a;
+    --imc-3: #f5c04a;
+    --imc-4: #e86a2a;
+    --imc-5: #b8282c;
+    --imc-6: #6e1430;
     --ombre: 0 1px 2px rgba(20, 24, 33, .06), 0 2px 8px rgba(20, 24, 33, .04);
     --rayon: 12px;
     --police: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -32,6 +39,12 @@
         --accent: #6b9bff;
         --accent-doux: #1c2a45;
         --serie: #5b8ff8;
+        --imc-1: #3987e5;
+        --imc-2: #2fae4f;
+        --imc-3: #f3c65a;
+        --imc-4: #eb8238;
+        --imc-5: #d63c3c;
+        --imc-6: #a84aa8;
         --ombre: 0 1px 2px rgba(0, 0, 0, .3);
         color-scheme: dark;
     }
@@ -365,6 +378,69 @@ h2 {
 
 .lien-section { font-size: 13px; color: var(--accent); text-decoration: none; }
 .lien-section:hover { text-decoration: underline; }
+
+/* --- Jauge d'IMC ---------------------------------------------------------------- */
+
+.jauge-imc { margin-top: 12px; }
+.carte-jauge-imc { margin-top: 12px; }
+.carte-jauge-imc[hidden] { display: none; }
+
+.jauge-imc-barre {
+    position: relative;
+    display: flex;
+    gap: 2px;                    /* séparation nette entre les classes */
+    height: 10px;
+}
+
+.jauge-imc-segment { border-radius: 2px; opacity: .3; }
+.jauge-imc-segment:first-child { border-radius: 5px 2px 2px 5px; }
+.jauge-imc-segment:nth-last-child(2) { border-radius: 2px 5px 5px 2px; }
+.jauge-imc-segment.actif { opacity: 1; }
+
+/* Curseur : trait vertical dans la couleur du texte, cerclé de la couleur du fond, avec une pointe */
+.jauge-imc-curseur {
+    position: absolute;
+    top: -5px;
+    width: 4px;
+    height: 20px;
+    margin-left: -2px;
+    border-radius: 2px;
+    background: var(--texte);
+    box-shadow: 0 0 0 2px var(--surface);
+}
+
+.jauge-imc-curseur::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    left: -4px;
+    border: 6px solid transparent;
+    border-top-color: var(--texte);
+    border-bottom: 0;
+}
+
+.jauge-imc-graduations {
+    position: relative;
+    height: 14px;
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--texte-3);
+    font-variant-numeric: tabular-nums;
+}
+
+.jauge-imc-graduations span { position: absolute; transform: translateX(-50%); }
+
+.jauge-imc-classe {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texte);
+}
+
+.jauge-imc-pastille { flex: none; width: 10px; height: 10px; border-radius: 50%; }
 
 /* --- Tableaux ---------------------------------------------------------------- */
 

@@ -155,6 +155,23 @@ Pour un adulte, les pages Résultats et Détails affichent sous certaines mesure
 
 Le statut est toujours indiqué par une **icône et un libellé**, la couleur n'étant qu'un complément : ✓ vert dans la plage, ! ambre à surveiller (graisse insuffisante, eau hors de la moyenne), ! orange en excès, ! rouge pour l'obésité. La masse osseuse et l'âge métabolique n'ont pas de statut, seulement une comparaison.
 
+### Jauge d'IMC
+
+Sur les trois pages, l'IMC est accompagné d'une jauge colorée qui va de 15 à 45 kg/m² : sous l'IMC dans la carte de la page Résultats et dans la case de la page Détails, et sous les cartes de synthèse de la page Évolution quand la mesure choisie est l'IMC (pour la dernière valeur affichée, selon la précision choisie).
+
+| IMC (kg/m²) | Classe | Couleur |
+|---|---|---|
+| moins de 18,5 | Insuffisance pondérale (maigreur ou dénutrition) | bleu |
+| 18,5 à 24,9 | Corpulence normale (poids idéal) | vert |
+| 25,0 à 29,9 | Surpoids | jaune |
+| 30,0 à 34,9 | Obésité modérée (classe I) | orange |
+| 35,0 à 39,9 | Obésité sévère (classe II) | rouge |
+| 40,0 et plus | Obésité massive ou morbide (classe III) | rouge foncé (violet en mode sombre) |
+
+- La largeur de chaque classe sur la jauge est proportionnelle à son étendue en kg/m², et les seuils sont gradués sous la jauge.
+- **Pour se repérer** : la classe où se situe la valeur est en couleur pleine et les autres sont atténuées. Un curseur avec une pointe marque la valeur exacte, et le nom de la classe est écrit sous la jauge, la couleur n'étant jamais seule à porter l'information.
+- Les couleurs suivent une gamme ordonnée : bleu pour la maigreur, vert pour la normale, puis du jaune clair au rouge foncé pour les classes de plus en plus sévères. Les classes voisines restent distinctes, y compris pour les daltoniens. Elles sont définies dans `style.css` (variables `--imc-1` à `--imc-6`, avec une version pour le mode sombre) ; les seuils et les libellés le sont dans `CLASSES_IMC` du script.
+
 Sur la page Évolution, la plage du repère (graisse corporelle, graisse viscérale, eau) est dessinée en bande verte discrète derrière la courbe, d'après la pesée la plus récente. L'échelle reste cadrée sur les valeurs : si la plage est en dehors de la zone affichée, la légende le précise.
 
 ## Fichiers générés

@@ -26,6 +26,30 @@
     {%- endif -%}
 {%- endmacro %}
 
+{# Jauge colorée de l'IMC (15 à 45 kg/m²) : la classe de la valeur est en couleur pleine, les autres
+   atténuées ; un curseur marque la valeur et le nom de la classe est écrit en dessous.
+   La même jauge est construite en JavaScript sur la page Évolution (assets/evolution.js). #}
+{% macro jauge_imc_html(valeur) -%}
+    {%- set j = jauge_imc(valeur) -%}
+    {%- if j -%}
+    <div class="jauge-imc" role="meter" aria-valuemin="{{ j.bas }}" aria-valuemax="{{ j.haut }}" aria-valuenow="{{ j.imc }}"
+         aria-label="IMC {{ j.texte }} kg/m² : {{ j.classe.complet }}">
+        <div class="jauge-imc-barre">
+        {%- for s in j.segments %}
+            <span class="jauge-imc-segment{% if s.numero == j.classe.numero %} actif{% endif %}" style="flex: {{ s.largeur }}; background: var(--imc-{{ s.numero }})" title="{{ s.complet }}"></span>
+        {%- endfor %}
+            <span class="jauge-imc-curseur" style="left: {{ '%.2f'|format(j.curseur) }}%"></span>
+        </div>
+        <div class="jauge-imc-graduations" aria-hidden="true">
+        {%- for s in j.segments[1:] %}
+            <span style="left: {{ '%.2f'|format(s.position) }}%">{{ s.graduation }}</span>
+        {%- endfor %}
+        </div>
+        <div class="jauge-imc-classe"><span class="jauge-imc-pastille" style="background: var(--imc-{{ j.classe.numero }})"></span>{{ j.classe.complet }}</div>
+    </div>
+    {%- endif -%}
+{%- endmacro %}
+
 {# Valeur suivie de son unité #}
 {% macro valeur(texte, libelle) -%}
     {{ texte|fr }}{% if unite(libelle) %}<span class="unite">{{ unite(libelle) }}</span>{% endif %}
