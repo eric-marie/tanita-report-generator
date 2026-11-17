@@ -90,6 +90,12 @@ class TanitaReportGenerator:
         ["Âge métabolique"],
     ]
 
+    # Courte explication affichée sous certaines mesures de la page de détails
+    DESCRIPTIONS = {
+        "Apport calorique quotidien (kcal)": "Calories à consommer par jour pour garder ce poids",
+        "Métabolisme de base (kcal)": "Énergie dépensée au repos complet",
+    }
+
     # Segments corporels mesurés par la balance
     SEGMENTS = ["bras droit", "bras gauche", "buste", "jambe droite", "jambe gauche"]
 
@@ -558,6 +564,7 @@ class TanitaReportGenerator:
         self._render("details.html", os.path.join(dossier, "details.html"),
                      champs_profil=TanitaReportGenerator.PROFIL,
                      globales=TanitaReportGenerator.GLOBALES,
+                     descriptions=TanitaReportGenerator.DESCRIPTIONS,
                      segments=TanitaReportGenerator.SEGMENTS,
                      **self._contexte("details", profil))
 

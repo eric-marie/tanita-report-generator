@@ -499,6 +499,9 @@ fieldset.segmente legend {
 
 .case .repere { justify-content: flex-end; margin-top: 4px; }
 
+/* Courte explication sous une mesure */
+.ligne-description { margin: 4px 0 0; font-size: 12px; color: var(--texte-3); }
+
 .segments {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

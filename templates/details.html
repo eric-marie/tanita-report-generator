@@ -33,6 +33,7 @@
                     <span class="ligne-libelle">{{ nom(cle) }}</span>
                     <span class="ligne-valeur">{{ m.valeur(pesee.valeurs[cle], cle) }} {{ m.variation(pesee.variations[cle]) }}</span>
                 </div>
+                {% if descriptions[cle] %}<p class="ligne-description">{{ descriptions[cle] }}</p>{% endif %}
                 {{ m.repere(pesee.reperes.get(cle)) }}
             {% endfor %}
             </div>
