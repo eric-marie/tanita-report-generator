@@ -18,9 +18,20 @@
         <div class="carte-libelle">{{ nom(cle) }}</div>
         <div class="carte-valeur">{{ m.valeur(derniere.valeurs[cle], cle) }}</div>
         <div class="carte-pied">{{ m.variation(derniere.variations[cle]) }}{% if derniere.variations[cle] %} vs précédente{% endif %}</div>
+        {{ m.repere(derniere.reperes.get(cle)) }}
     </div>
 {% endfor %}
 </div>
+{% if derniere.reperes %}<p class="note">Repères indicatifs tirés du guide de la balance Tanita. Ils ne remplacent pas l'avis d'un médecin.</p>{% endif %}
+
+{% if bilan %}
+<!-- Composition de la variation de poids -->
+<h2>Depuis la première pesée</h2>
+<div class="carte bilan">
+    <p>Depuis le {{ bilan.depuis }}, le poids a varié de <strong>{{ bilan.poids.texte|fr }} kg</strong>{% if bilan.grasse and bilan.maigre %},
+    dont <strong>{{ bilan.grasse.texte|fr }} kg</strong> de masse grasse et <strong>{{ bilan.maigre.texte|fr }} kg</strong> de masse maigre (muscles, os, eau…){% endif %}.</p>
+</div>
+{% endif %}
 
 <!-- Historique complet -->
 <h2>Toutes les pesées</h2>

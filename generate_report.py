@@ -47,14 +47,26 @@ class TanitaReportGenerator:
     # Informations de profil (le reste des indicateurs sont des mesures)
     PROFIL = ["Modèle", "Sexe", "Âge", "Taille (cm)", "Niveau d'activité", "Type de corps"]
 
-    # Mesures suivies dans le temps (du poids à l'eau corporelle)
-    MESURES = list(CODES.values())[list(CODES).index("Wk"):]
+    # Mesures calculées par le script à partir des mesures de la balance (formules du guide Tanita)
+    DERIVEES = [
+        "Masse grasse (kg)",                    # poids × graisse corporelle %
+        "Masse maigre (kg)",                    # poids − masse grasse
+        "Métabolisme de base (kcal)",           # apport calorique quotidien / facteur d'activité
+        "Indice de masse musculaire (kg/m²)",   # masse musculaire / taille²
+    ]
+
+    # Mesures suivies dans le temps : celles de la balance (du poids à l'eau corporelle), puis les mesures calculées
+    MESURES = list(CODES.values())[list(CODES).index("Wk"):] + DERIVEES
+
+    # Mesures que le guide ne donne que pour les adultes (18 à 99 ans)
+    CODES_ADULTES = ["mW", "mr", "ml", "mR", "mL", "mT", "bW", "rD", "rA", "ww"]
 
     # Mesures mises en avant sur la page de résultats
     CLES = [
         "Poids (kg)",
         "IMC",
         "Graisse corporelle totale (%)",
+        "Masse grasse (kg)",
         "Masse musculaire totale (kg)",
         "Graisse viscérale",
         "Eau corporelle (%)",
@@ -73,6 +85,10 @@ class TanitaReportGenerator:
         "Graisse viscérale",
         "Apport calorique quotidien (kcal)",
         "Âge métabolique",
+        "Masse grasse (kg)",
+        "Masse maigre (kg)",
+        "Métabolisme de base (kcal)",
+        "Indice de masse musculaire (kg/m²)",
     ]
 
     # Segments corporels mesurés par la balance
@@ -99,6 +115,34 @@ class TanitaReportGenerator:
     # Conversion des livres et des pouces
     KG_PAR_LIVRE = 0.45359237
     CM_PAR_POUCE = 2.54
+
+    # --- Données du guide Tanita (BC_Guide.pdf) -----------------------------------------------
+
+    # Apport calorique quotidien = métabolisme de base × facteur d'activité (source : OMS),
+    # par sexe ("1" homme, "2" femme) et niveau d'activité
+    FACTEURS_ACTIVITE = {
+        "1": {"1": 1.55, "2": 1.78, "3": 2.10},
+        "2": {"1": 1.56, "2": 1.64, "3": 1.82},
+    }
+
+    # Plages de graisse corporelle des adultes standard (Gallagher D. et al., Am J Clin Nutr 2000,
+    # source citée par le guide) : (âge min, âge max, début standard, début excès, début obésité)
+    PLAGES_GRAISSE = {
+        "1": [(20, 39, 8, 20, 25), (40, 59, 11, 22, 28), (60, 99, 13, 25, 30)],
+        "2": [(20, 39, 21, 33, 39), (40, 59, 23, 34, 40), (60, 99, 24, 36, 42)],
+    }
+
+    # Eau corporelle moyenne d'un adulte en bonne santé (%)
+    PLAGES_EAU = {"1": (50, 65), "2": (45, 60)}
+
+    # Graisse viscérale : 1 à 12 = niveau sain, 13 à 59 = excès
+    VISCERALE_SAINE = (1, 12)
+
+    # Masse osseuse moyenne estimée des 20-40 ans selon le poids : (poids maximum exclu, masse osseuse)
+    OS_MOYEN = {
+        "1": [(65, 2.66), (95, 3.29), (None, 3.69)],
+        "2": [(50, 1.95), (75, 2.40), (None, 2.95)],
+    }
 
     def __init__(self):
         self._definePathes()
@@ -293,8 +337,16 @@ class TanitaReportGenerator:
                 except ValueError:
                     pass
 
+            # Mesures réservées aux adultes par le guide : ignorées avant 18 ans
+            age = TanitaReportGenerator._toFloat(ligne.get("AG"))
+            if age is not None and age < 18:
+                for code in TanitaReportGenerator.CODES_ADULTES:
+                    ligne.pop(code, None)
+
             # Valeurs par libellé ; une valeur absente (ex. mesures non fournies pour un enfant) reste vide
             valeurs = {libelle: ligne.get(code, "") for code, libelle in TanitaReportGenerator.CODES.items()}
+            valeurs.update(TanitaReportGenerator._derivees(ligne))
+            reperes = TanitaReportGenerator._reperes(ligne)
             valeurs["Sexe"] = TanitaReportGenerator.SEXES.get(valeurs["Sexe"], valeurs["Sexe"])
             valeurs["Niveau d'activité"] = TanitaReportGenerator.NIVEAUX_ACTIVITE.get(valeurs["Niveau d'activité"], valeurs["Niveau d'activité"])
             valeurs["Type de corps"] = TanitaReportGenerator._typeCorps(valeurs["Type de corps"])
@@ -302,6 +354,7 @@ class TanitaReportGenerator:
                 "id": f"{valeurs['Date']} {valeurs['Heure']}",
                 "moment": moment,
                 "valeurs": valeurs,
+                "reperes": reperes,
             })
 
         if unites_incoherentes:
@@ -322,6 +375,106 @@ class TanitaReportGenerator:
                 for key in TanitaReportGenerator.MESURES
             }
         return pesees
+
+    # ------------------------------------------------------------------------------------------
+    # Mesures calculées et repères (guide Tanita)
+    # ------------------------------------------------------------------------------------------
+
+    # Mesures calculées à partir des valeurs d'une ligne (vides si une donnée manque)
+    @staticmethod
+    def _derivees(ligne):
+        f = TanitaReportGenerator._toFloat
+        poids, graisse, muscle = f(ligne.get("Wk")), f(ligne.get("FW")), f(ligne.get("mW"))
+        taille, apport = f(ligne.get("Hm")), f(ligne.get("rD"))
+        facteur = TanitaReportGenerator.FACTEURS_ACTIVITE.get(ligne.get("GE"), {}).get(ligne.get("AL"))
+
+        derivees = dict.fromkeys(TanitaReportGenerator.DERIVEES, "")
+        if poids is not None and graisse is not None:
+            masse_grasse = round(poids * graisse / 100, 1)
+            derivees["Masse grasse (kg)"] = f"{masse_grasse:.1f}"
+            derivees["Masse maigre (kg)"] = f"{poids - masse_grasse:.1f}"
+        if apport is not None and facteur:
+            derivees["Métabolisme de base (kcal)"] = f"{apport / facteur:.0f}"
+        if muscle is not None and taille:
+            derivees["Indice de masse musculaire (kg/m²)"] = f"{muscle / (taille / 100) ** 2:.1f}"
+        return derivees
+
+    # Repères du guide pour une pesée d'adulte, par libellé de mesure :
+    # {"libelle": "Niveau sain", "plage": "Sain : 1 à 12", "statut": "bon|attention|exces|alerte|None",
+    #  "min": 1, "max": 12}  (min et max : plage affichée en bande sur le graphique)
+    @staticmethod
+    def _reperes(ligne):
+        f, fr = TanitaReportGenerator._toFloat, TanitaReportGenerator._formatFr
+        sexe, age, poids = ligne.get("GE"), f(ligne.get("AG")), f(ligne.get("Wk"))
+        if sexe not in TanitaReportGenerator.SEXES or age is None or age < 18:
+            return {}
+        reperes = {}
+
+        # Graisse corporelle (plages définies à partir de 20 ans)
+        graisse = f(ligne.get("FW"))
+        tranche = next((t for t in TanitaReportGenerator.PLAGES_GRAISSE[sexe] if t[0] <= age <= t[1]), None)
+        if graisse is not None and tranche:
+            _, _, standard, exces, obesite = tranche
+            if graisse < standard:
+                libelle, statut = "Masse grasse insuffisante", "attention"
+            elif graisse < exces:
+                libelle, statut = "Standard", "bon"
+            elif graisse < obesite:
+                libelle, statut = "Masse grasse excessive", "exces"
+            else:
+                libelle, statut = "Obésité", "alerte"
+            reperes["Graisse corporelle totale (%)"] = {
+                "libelle": libelle, "statut": statut, "min": standard, "max": exces,
+                "plage": f"Standard de {standard} à {exces} % ({tranche[0]}-{tranche[1]} ans)",
+            }
+
+        # Eau corporelle
+        eau = f(ligne.get("ww"))
+        if eau is not None:
+            bas, haut = TanitaReportGenerator.PLAGES_EAU[sexe]
+            libelle, statut = ("Dans la moyenne", "bon") if bas <= eau <= haut else \
+                              (("Sous la moyenne", "attention") if eau < bas else ("Au-dessus de la moyenne", "attention"))
+            reperes["Eau corporelle (%)"] = {"libelle": libelle, "statut": statut, "min": bas, "max": haut,
+                                             "plage": f"Moyenne de {bas} à {haut} %"}
+
+        # Graisse viscérale
+        viscerale = f(ligne.get("IF"))
+        if viscerale is not None:
+            bas, haut = TanitaReportGenerator.VISCERALE_SAINE
+            sain = viscerale <= haut
+            reperes["Graisse viscérale"] = {"libelle": "Niveau sain" if sain else "Excès", "statut": "bon" if sain else "exces",
+                                            "min": bas, "max": haut, "plage": f"Sain de {bas} à {haut}"}
+
+        # Masse osseuse : moyenne estimée pour ce poids (simple comparaison, sans statut)
+        os_ = f(ligne.get("bW"))
+        if os_ is not None and poids is not None:
+            moyenne = next(m for limite, m in TanitaReportGenerator.OS_MOYEN[sexe] if limite is None or poids < limite)
+            reperes["Masse osseuse (kg)"] = {"libelle": f"Moyenne pour ce poids : {fr(f'{moyenne:.2f}')} kg",
+                                             "statut": None, "plage": "Moyenne des 20-40 ans"}
+
+        # Âge métabolique comparé à l'âge réel (sans statut)
+        age_metabolique = f(ligne.get("rA"))
+        if age_metabolique is not None:
+            ecart = int(age_metabolique - age)
+            libelle = "Égal à l'âge réel" if ecart == 0 else \
+                      f"{abs(ecart)} an{'s' if abs(ecart) > 1 else ''} de {'plus' if ecart > 0 else 'moins'} que l'âge réel"
+            reperes["Âge métabolique"] = {"libelle": libelle, "statut": None, "plage": f"Âge réel : {int(age)} ans"}
+
+        return reperes
+
+    # Bilan depuis la première pesée : variation du poids, de la masse grasse et de la masse maigre
+    @staticmethod
+    def _bilan(pesees):
+        if len(pesees) < 2:
+            return None
+        premiere, derniere = pesees[-1]["valeurs"], pesees[0]["valeurs"]
+        bilan = {"depuis": premiere["Date"]}
+        for cle, libelle in (("poids", "Poids (kg)"), ("grasse", "Masse grasse (kg)"), ("maigre", "Masse maigre (kg)")):
+            variation = TanitaReportGenerator._variation(derniere[libelle], premiere[libelle])
+            if variation and variation["sens"] == "stable":
+                variation = {"texte": "0", "sens": "stable"}
+            bilan[cle] = variation
+        return bilan if bilan["poids"] else None
 
     # Libellé du type de corps : standard (0) ou athlète
     @staticmethod
@@ -400,6 +553,7 @@ class TanitaReportGenerator:
         self._render("resultats.html", os.path.join(dossier, "resultats.html"),
                      cles=TanitaReportGenerator.CLES,
                      mesures=TanitaReportGenerator.MESURES,
+                     bilan=TanitaReportGenerator._bilan(profil["pesees"]),
                      **self._contexte("resultats", profil))
 
         self._render("details.html", os.path.join(dossier, "details.html"),
@@ -439,11 +593,15 @@ class TanitaReportGenerator:
                 })
             # Précision des mesures (nombre de décimales), pour l'échelle du graphique
             decimales = max((TanitaReportGenerator._decimales(p["valeurs"][key]) for p in chronologie), default=0)
+
+            # Plage de repère du guide (d'après la pesée la plus récente qui en a une), affichée en bande
+            repere = next((p["reperes"][key] for p in pesees if "min" in p["reperes"].get(key, {})), None)
             graphiques.append({
                 "nom": TanitaReportGenerator._nom(key),
                 "unite": TanitaReportGenerator._unite(key),
                 "decimales": decimales,
                 "points": points,
+                "repere": {"min": repere["min"], "max": repere["max"], "plage": repere["plage"]} if repere else None,
             })
         return graphiques
 

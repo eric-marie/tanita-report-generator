@@ -7,6 +7,16 @@
     {%- endif -%}
 {%- endmacro %}
 
+{# Repère du guide Tanita : icône + libellé (la couleur n'est jamais seule), puis la plage #}
+{% macro repere(r) -%}
+    {%- if r -%}
+        <div class="repere{% if r.statut %} statut-{{ r.statut }}{% endif %}">
+            {%- if r.statut %}<span class="repere-icone" aria-hidden="true">{{ "✓" if r.statut == "bon" else "!" }}</span>{% endif -%}
+            <span class="repere-libelle">{{ r.libelle }}</span><span class="repere-plage">{{ r.plage|fr }}</span>
+        </div>
+    {%- endif -%}
+{%- endmacro %}
+
 {# Valeur suivie de son unité #}
 {% macro valeur(texte, libelle) -%}
     {{ texte|fr }}{% if unite(libelle) %}<span class="unite">{{ unite(libelle) }}</span>{% endif %}

@@ -283,6 +283,46 @@ h2 {
 
 .sans-valeur { color: var(--texte-3); }
 
+/* --- Repères du guide Tanita ------------------------------------------------- */
+/* Couleurs de statut de référence ; toujours accompagnées d'une icône et d'un libellé */
+
+.repere {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 6px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--texte-2);
+}
+
+.repere-icone {
+    display: inline-grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--texte-3);
+    align-self: center;
+}
+
+.statut-bon .repere-icone { background: #0ca30c; }
+.statut-attention .repere-icone { background: #fab219; color: #0b0b0b; }
+.statut-exces .repere-icone { background: #ec835a; }
+.statut-alerte .repere-icone { background: #d03b3b; }
+
+.repere-libelle { font-weight: 600; color: var(--texte); }
+.repere-plage { color: var(--texte-3); }
+
+.liste-mesures div { flex-wrap: wrap; }
+.liste-mesures .repere { flex-basis: 100%; justify-content: flex-end; margin-top: 2px; }
+
+.bilan p { margin: 0; color: var(--texte-2); }
+.bilan strong { color: var(--texte); font-variant-numeric: tabular-nums; }
+
 /* --- Tableaux ---------------------------------------------------------------- */
 
 .tableau-conteneur {
@@ -579,6 +619,12 @@ a.carte-profil:focus-visible { outline: 2px solid var(--accent); outline-offset:
 .g-aire { fill: var(--serie); opacity: .1; }
 .g-point { fill: var(--serie); stroke: var(--surface); stroke-width: 2; }
 .g-repere { pointer-events: none; }
+.g-repere-bande { fill: #0ca30c; opacity: .07; }
+.g-repere-limite { stroke: #0ca30c; stroke-width: 1; opacity: .35; }
+.legende-repere { display: flex; align-items: center; gap: 8px; margin: 8px 8px 0; font-size: 12px; color: var(--texte-2); }
+.legende-repere::before { content: ""; flex: none; width: 14px; height: 10px; border-radius: 2px; background: rgba(12, 163, 12, .18); border: 1px solid rgba(12, 163, 12, .45); }
+.legende-repere.hors-zone::before { background: transparent; border-style: dashed; }
+.legende-repere[hidden] { display: none; }
 .g-curseur { stroke: var(--texte-3); stroke-width: 1; pointer-events: none; }
 
 .infobulle {

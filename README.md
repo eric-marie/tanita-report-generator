@@ -81,8 +81,9 @@ python generate_report.py
 
    Un profil qui a **au moins une pesée** est considéré comme utilisé et reçoit son propre rapport. Un profil configuré mais sans pesée est seulement signalé sur la page d'accueil. Les autres sont ignorés. La carte prévoit 8 fichiers de chaque sorte : si l'un des fichiers 5 à 8 n'est pas vide, le script le signale et l'ignore.
 2. **Il lit les pesées** de chaque profil, une ligne par pesée. Chaque valeur est précédée de son code dans le fichier (`Wk,100.1` pour un poids de 100,1 kg) : le script lit les valeurs **par leur code**, pas par leur position, et en extrait 27 indicateurs : date, heure, sexe, âge, taille, niveau d'activité, type de corps, poids, IMC, masse grasse (totale et par bras, jambe et buste), masse musculaire (totale et par segment), masse osseuse, graisse viscérale, apport calorique quotidien, âge métabolique et eau corporelle. Une valeur absente de la ligne reste vide (voir *Contrôles à la lecture*).
-3. **Il calcule les variations.** Les pesées sont classées de la plus récente à la plus ancienne et, pour chaque mesure, il calcule la variation par rapport à la pesée précédente. Pour la page d'évolution, il intègre à la page les pesées de chaque mesure (date et heure, valeur, précision de la mesure) : la synthèse, les moyennes et l'historique sont ensuite calculés dans le navigateur.
-4. **Il génère les pages HTML** à partir des templates Jinja2 du dossier `templates/`. Les nombres sont affichés avec une virgule décimale, et les codes de la balance en clair, d'après le manuel :
+3. **Il calcule des mesures complémentaires et des repères** à partir du guide de la balance (voir *Mesures calculées* et *Repères du guide Tanita*).
+4. **Il calcule les variations.** Les pesées sont classées de la plus récente à la plus ancienne et, pour chaque mesure, il calcule la variation par rapport à la pesée précédente. Pour la page d'évolution, il intègre à la page les pesées de chaque mesure (date et heure, valeur, précision de la mesure) : la synthèse, les moyennes et l'historique sont ensuite calculés dans le navigateur.
+5. **Il génère les pages HTML** à partir des templates Jinja2 du dossier `templates/`. Les nombres sont affichés avec une virgule décimale, et les codes de la balance en clair, d'après le manuel :
    - sexe : 1 = Homme, 2 = Femme ;
    - niveau d'activité : 1 = peu ou pas d'exercice, 2 = activité modérée, 3 = activité intense ;
    - type de corps : 0 = Standard, autre valeur = Athlète (la balance n'a que ces deux types ; en mode athlète, elle fixe le niveau d'activité à 3).
@@ -97,6 +98,36 @@ Le script affiche ensuite les profils trouvés, le nombre de pesées de chacun, 
 - **Unités** : la balance peut afficher en kg, en livres ou en stones. Le script vérifie l'unité grâce à l'IMC (poids en kg / taille en m²) : si l'IMC enregistré ne correspond qu'à un poids en livres (et éventuellement une taille en pouces), les masses sont converties en kg et la taille en cm. Si rien ne correspond, les valeurs sont affichées telles quelles avec un avertissement.
 - **Format des dates** : le script détecte le format des dates de chaque fichier (jj/mm/aaaa, mm/jj/aaaa ou aaaa/mm/jj) grâce aux jours supérieurs à 12, et les affiche toujours en jj/mm/aaaa. Si aucune date ne lève l'ambiguïté, jj/mm/aaaa est retenu avec une remarque.
 - **Valeurs absentes** : pour un enfant (5 à 17 ans), la balance ne fournit que le poids, la graisse corporelle et l'IMC. Les autres mesures restent vides dans les pages, et le graphique l'indique. Une ligne sans poids est ignorée.
+- **Mesures réservées aux adultes** : d'après le guide, la masse musculaire, la masse osseuse, l'eau corporelle, l'apport calorique et l'âge métabolique ne s'appliquent qu'entre 18 et 99 ans. Avant 18 ans, elles sont ignorées même si la ligne en contient, ainsi que les mesures calculées et les repères qui en dépendent.
+
+### Mesures calculées
+
+Le script ajoute 4 mesures calculées à partir des valeurs de la balance. Elles apparaissent comme les autres dans les pages (cartes, détails, tableau, évolution) :
+
+| Mesure | Calcul |
+|---|---|
+| Masse grasse (kg) | poids × graisse corporelle (%) |
+| Masse maigre (kg) | poids − masse grasse (muscles, os, eau…) |
+| Métabolisme de base (kcal) | apport calorique quotidien ÷ facteur d'activité. Le guide donne apport = métabolisme de base × facteur, avec les facteurs de l'OMS : homme 1,55 / 1,78 / 2,10 et femme 1,56 / 1,64 / 1,82 pour les niveaux d'activité 1 / 2 / 3. |
+| Indice de masse musculaire (kg/m²) | masse musculaire ÷ taille², l'indice de muscle selon la taille cité par le guide |
+
+La page Résultats indique aussi comment se répartit la variation de poids depuis la première pesée : « le poids a varié de −0,1 kg, dont +1,0 kg de masse grasse et −1,1 kg de masse maigre ».
+
+### Repères du guide Tanita
+
+Pour un adulte, les pages Résultats et Détails affichent sous certaines mesures un repère tiré du guide de la balance (`TANITA/GRAPHV1/MANUAL/BC_Guide.pdf`). Ces repères sont indicatifs et ne remplacent pas l'avis d'un médecin, ce que les pages rappellent.
+
+| Mesure | Repère | Source citée par le guide |
+|---|---|---|
+| Graisse corporelle (%) | Selon le sexe et l'âge, à partir de 20 ans : masse grasse insuffisante, **standard**, excessive ou obésité. Seuils de début du standard / de l'excès / de l'obésité : homme 8 / 20 / 25 % (20-39 ans), 11 / 22 / 28 % (40-59 ans), 13 / 25 / 30 % (60-99 ans) ; femme 21 / 33 / 39 %, 23 / 34 / 40 %, 24 / 36 / 42 %. | Gallagher D. et al., *Am J Clin Nutr* 2000. Le guide présente ces plages sous forme de graphique ; les seuils chiffrés sont ceux de cette étude. |
+| Graisse viscérale | 1 à 12 : niveau sain ; 13 à 59 : excès | Columbia University et Tanita Institute |
+| Eau corporelle (%) | Moyenne d'un adulte en bonne santé : homme 50 à 65 %, femme 45 à 60 % | Recherche interne Tanita |
+| Masse osseuse (kg) | Comparaison avec la moyenne estimée des 20-40 ans pour le même poids (homme : 2,66 kg sous 65 kg, 3,29 kg de 65 à 95 kg, 3,69 kg au-delà ; femme : 1,95 kg sous 50 kg, 2,40 kg de 50 à 75 kg, 2,95 kg au-delà) | Tanita Body Weight Science Institute |
+| Âge métabolique | Comparaison avec l'âge réel (« 6 ans de plus que l'âge réel ») | — |
+
+Le statut est toujours indiqué par une **icône et un libellé**, la couleur n'étant qu'un complément : ✓ vert dans la plage, ! ambre à surveiller (graisse insuffisante, eau hors de la moyenne), ! orange en excès, ! rouge pour l'obésité. La masse osseuse et l'âge métabolique n'ont pas de statut, seulement une comparaison.
+
+Sur la page Évolution, la plage du repère (graisse corporelle, graisse viscérale, eau) est dessinée en bande verte discrète derrière la courbe, d'après la pesée la plus récente. L'échelle reste cadrée sur les valeurs : si la plage est en dehors de la zone affichée, la légende le précise.
 
 ## Fichiers générés
 
@@ -120,8 +151,8 @@ rapport/
 | Fichier | Contenu |
 |---|---|
 | `index.html` | Liste des profils trouvés : nom, sexe, âge, taille, dernier poids, date de la dernière pesée et nombre de pesées. Les profils configurés sans pesée y sont signalés. **S'il n'y a qu'un seul profil**, cette page redirige directement vers son rapport. |
-| `profil-n/resultats.html` | Profil, cartes des 8 mesures principales de la dernière pesée avec leur variation, puis tableau de toutes les pesées. |
-| `profil-n/details.html` | Détail d'une pesée choisie dans une liste déroulante : profil, composition globale avec variations, et répartition de la graisse et du muscle par segment (bras, jambes, buste). |
+| `profil-n/resultats.html` | Profil, cartes des 9 mesures principales de la dernière pesée avec leur variation et leur repère, répartition de la variation de poids depuis la première pesée (masse grasse / masse maigre), puis tableau de toutes les pesées. |
+| `profil-n/details.html` | Détail d'une pesée choisie dans une liste déroulante : profil, composition globale avec variations, repères et mesures calculées, et répartition de la graisse et du muscle par segment (bras, jambes, buste). |
 | `profil-n/evolution.html` | Pour une mesure choisie dans une liste déroulante et une **précision** au choix (mesures, jour, semaine ou mois) : dernière valeur, minimum, maximum, variation totale, **graphique de l'évolution**, puis historique avec la variation entre chaque point. |
 
 Dans les pages d'un profil, l'en-tête affiche le nom du profil, un lien « Changer » vers la page d'accueil (s'il y a plusieurs profils) et la navigation entre les trois pages.
@@ -168,4 +199,4 @@ Les pages générées contiennent des données de santé (poids, composition cor
 - le fichier `profils.json` (noms des profils) ;
 - les pages HTML de `rapport/` et les dossiers `rapport/profil-n/`.
 
-Seuls le script, les templates, la feuille de style et le modèle `profils.example.json` sont versionnés.
+Seuls le script, les templates, les fichiers de `rapport/assets/` (feuille de style et scripts) et le modèle `profils.example.json` sont versionnés.

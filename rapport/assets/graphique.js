@@ -77,7 +77,7 @@
 
     function dessiner(conteneur, serie) {
         var largeur = conteneur.clientWidth;
-        if (!largeur) return;
+        if (!largeur) return { repereVisible: false };
         while (conteneur.firstChild) conteneur.removeChild(conteneur.firstChild);
 
         // Mesure absente de toutes les pesées (ex. non fournie par la balance pour un enfant)
@@ -86,7 +86,7 @@
             vide.className = "graphique-vide";
             vide.textContent = "Aucune valeur enregistrée pour cette mesure.";
             conteneur.appendChild(vide);
-            return;
+            return { repereVisible: false };
         }
 
         var points = serie.points;
@@ -119,6 +119,22 @@
             element("text", { x: gauche - 10, y: y(v), dy: "0.32em", "text-anchor": "end", "class": "g-texte" }, svg)
                 .textContent = nombreFr(v, ech.decimales);
         });
+
+        // Plage de repère du guide (ex. graisse viscérale saine de 1 à 12), en bande discrète,
+        // limitée à la zone visible : l'échelle reste cadrée sur les valeurs
+        var repereVisible = false;
+        if (serie.repere) {
+            var yHaut = Math.max(y(serie.repere.max), haut), yBas = Math.min(y(serie.repere.min), bas);
+            if (yBas > yHaut) {
+                repereVisible = true;
+                element("rect", { x: gauche, y: yHaut, width: droite - gauche, height: yBas - yHaut, "class": "g-repere-bande" }, svg);
+                [serie.repere.max, serie.repere.min].forEach(function (v) {
+                    if (y(v) >= haut && y(v) <= bas) {
+                        element("line", { x1: gauche, x2: droite, y1: y(v), y2: y(v), "class": "g-repere-limite" }, svg);
+                    }
+                });
+            }
+        }
 
         // Graduations horizontales : dates réparties sur la période, sinon libellés du premier et du dernier point
         if (temporel && tMax > tMin) {
@@ -224,6 +240,7 @@
                 cacher();
             }
         });
+        return { repereVisible: repereVisible };
     }
 
     window.TanitaGraphique = { dessiner: dessiner };

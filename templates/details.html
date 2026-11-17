@@ -30,10 +30,12 @@
             <div>
                 <dt>{{ nom(cle) }}</dt>
                 <dd>{{ m.valeur(pesee.valeurs[cle], cle) }} {{ m.variation(pesee.variations[cle]) }}</dd>
+                {{ m.repere(pesee.reperes.get(cle)) }}
             </div>
         {% endfor %}
         </dl>
     </div>
+    {% if pesee.reperes %}<p class="note">Repères indicatifs tirés du guide de la balance Tanita. Ils ne remplacent pas l'avis d'un médecin.</p>{% endif %}
 
     <!-- Répartition par segment -->
     <h2>Répartition par segment</h2>

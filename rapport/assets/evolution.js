@@ -28,6 +28,7 @@
     var titre = document.getElementById("titreGraphique");
     var conteneurGraphique = document.getElementById("graphique");
     var tableau = document.getElementById("tableauEvolution");
+    var legende = document.getElementById("legendeRepere");
 
     var etat = { mesure: 0, precision: "jour", serie: null };
 
@@ -73,7 +74,7 @@
     function serieAffichee(serie, precision) {
         if (precision === "mesures") {
             return {
-                nom: serie.nom, unite: serie.unite, decimales: serie.decimales,
+                nom: serie.nom, unite: serie.unite, decimales: serie.decimales, repere: serie.repere,
                 points: serie.points.map(function (p) {
                     return { t: p.t, v: p.v, texte: p.texte, libelle: p.date, detail: p.date + " à " + p.heure,
                              date: p.date, heure: p.heure, nb: 1 };
@@ -93,7 +94,7 @@
         });
         var decimales = decimalesMoyenne(serie);
         return {
-            nom: serie.nom, unite: serie.unite, decimales: decimales,
+            nom: serie.nom, unite: serie.unite, decimales: decimales, repere: serie.repere,
             points: groupes.map(function (g) {
                 var v = arrondi(g.somme / g.nb, decimales);
                 return {
@@ -202,7 +203,17 @@
             (etat.precision === "mesures" ? "" : " · moyenne par " + { jour: "jour", semaine: "semaine", mois: "mois" }[etat.precision]);
         remplirCartes(etat.serie);
         remplirTableau(etat.serie, etat.precision);
-        TanitaGraphique.dessiner(conteneurGraphique, etat.serie);
+        dessinerGraphique();
+    }
+
+    // Dessiner le graphique et sa légende de repère (bande verte = plage du guide Tanita)
+    function dessinerGraphique() {
+        var rendu = TanitaGraphique.dessiner(conteneurGraphique, etat.serie);
+        var repere = etat.serie.repere;
+        legende.hidden = !repere || !etat.serie.points.length;
+        legende.classList.toggle("hors-zone", !!repere && !rendu.repereVisible);
+        legende.textContent = repere ? "Repère du guide Tanita : " + repere.plage.replace(/\./g, ",") +
+            (rendu.repereVisible ? "" : " (hors de la zone affichée)") : "";
     }
 
     // Sans date lisible, seules les pesées brutes peuvent être affichées
@@ -229,7 +240,7 @@
     function redimensionner() {
         if (conteneurGraphique.clientWidth !== derniereLargeur) {
             derniereLargeur = conteneurGraphique.clientWidth;
-            TanitaGraphique.dessiner(conteneurGraphique, etat.serie);
+            dessinerGraphique();
         }
     }
     if ("ResizeObserver" in window) new ResizeObserver(redimensionner).observe(conteneurGraphique);
