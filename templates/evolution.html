@@ -1,55 +1,82 @@
 {% extends "_base.html" %}
+{% import "_macros.html" as m %}
 
-{% block html_head_title %}Évolution des Indicateurs{% endblock %}
-{% block header %}Évolution des Indicateurs{% endblock %}
+{% block html_head_title %}Évolution{% endblock %}
+{% block header %}Évolution{% endblock %}
+{% block sous_titre %}<p class="sous-titre">Historique d'une mesure, de la pesée la plus récente à la plus ancienne</p>{% endblock %}
+
+{% block outils %}
+{% if pesees %}
+<div class="selecteur">
+    <label for="mesureSelect">Mesure</label>
+    <select id="mesureSelect">
+    {% for cle in mesures %}
+        <option value="mesure-{{ loop.index }}">{{ cle }}</option>
+    {% endfor %}
+    </select>
+</div>
+{% endif %}
+{% endblock %}
 
 {% block content %}
-<!-- Bloc de filtre -->
-<div class="form-group">
-	<label for="filterSelect">Filtrer par :</label>
-	<select class="form-control" id="indicatorSelect" onchange="showEvolution()">
-	{% for indicator in indicators %}
-		<option value="{{ indicator }}">{{ indicator }}</option>
-	{% endfor %}
-	</select>
-</div>
+{% for cle in mesures %}
+{% set stats = statistiques[cle] %}
+<section class="evolution" id="mesure-{{ loop.index }}"{% if not loop.first %} hidden{% endif %}>
+    <!-- Synthèse -->
+    <div class="grille-cartes">
+        <div class="carte">
+            <div class="carte-libelle">Dernière valeur</div>
+            <div class="carte-valeur">{{ m.valeur(stats.derniere, cle) }}</div>
+        </div>
+        <div class="carte">
+            <div class="carte-libelle">Minimum</div>
+            <div class="carte-valeur">{{ m.valeur(stats.min, cle) }}</div>
+        </div>
+        <div class="carte">
+            <div class="carte-libelle">Maximum</div>
+            <div class="carte-valeur">{{ m.valeur(stats.max, cle) }}</div>
+        </div>
+        <div class="carte">
+            <div class="carte-libelle">Variation totale</div>
+            <div class="carte-valeur">{% if stats.total %}{{ m.valeur(stats.total.texte, cle) }}{% else %}<span class="sans-valeur">—</span>{% endif %}</div>
+            <div class="carte-pied">depuis la première pesée</div>
+        </div>
+    </div>
 
-<!-- Tableaux de résultats -->
-<div id="evolution">
-{% for indicator, values in evolution.items() %}
-	<div class="table-responsive mt-4 evolution" id="{{ indicator }}" style="display:none">
-		<table class="table table-bordered">
-			<tbody>
-			{% for date_heure, value in values.items() %}
-				<tr>
-					<td>{{ date_heure }}</td>
-					<td>{{ value }}</td>
-				</tr>
-			{% endfor %}
-			</tbody>
-			<thead>
-				<tr>
-					<th>Date/Heure</th>
-					<th>Valeur</th>
-				</tr>
-			</thead>
-		</table>
-	</div>
+    <!-- Historique -->
+    <h2>{{ nom(cle) }}</h2>
+    <div class="tableau-conteneur">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Valeur{% if unite(cle) %}<span class="unite">{{ unite(cle) }}</span>{% endif %}</th>
+                    <th>Variation<span class="unite">vs précédente</span></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for pesee in pesees %}
+                <tr>
+                    {{ m.cellule_date(pesee) }}
+                    <td>{{ pesee.valeurs[cle]|fr }}</td>
+                    <td>{{ m.variation(pesee.variations[cle]) }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endfor %}
-</div>
 {% endblock %}
 
 {% block script %}
 <script>
-	function showEvolution() {
-		var selectedIndicator = document.getElementById("indicatorSelect").value;
-		var evolutions = document.getElementsByClassName("evolution");
-		for (var i = 0; i < evolutions.length; i++) {
-			evolutions[i].style.display = "none";
-		}
-		document.getElementById(selectedIndicator).style.display = "block";
-	}
-	// Show the first indicator by default
-	document.getElementById("evolution").firstElementChild.style.display = "block";
+    // Afficher la mesure choisie dans la liste
+    document.getElementById("mesureSelect").addEventListener("change", function () {
+        var sections = document.getElementsByClassName("evolution");
+        for (var i = 0; i < sections.length; i++) {
+            sections[i].hidden = sections[i].id !== this.value;
+        }
+    });
 </script>
 {% endblock %}

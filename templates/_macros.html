@@ -1,0 +1,27 @@
+{# Pastille de variation par rapport à la pesée précédente #}
+{% macro variation(v) -%}
+    {%- if v -%}
+        <span class="variation {{ v.sens }}">{{ v.texte|fr }}</span>
+    {%- else -%}
+        <span class="sans-valeur">—</span>
+    {%- endif -%}
+{%- endmacro %}
+
+{# Valeur suivie de son unité #}
+{% macro valeur(texte, libelle) -%}
+    {{ texte|fr }}{% if unite(libelle) %}<span class="unite">{{ unite(libelle) }}</span>{% endif %}
+{%- endmacro %}
+
+{# Date et heure d'une pesée dans une cellule de tableau #}
+{% macro cellule_date(pesee) -%}
+    <td class="date">{{ pesee.valeurs["Date"] }}<span class="heure">{{ pesee.valeurs["Heure"] }}</span></td>
+{%- endmacro %}
+
+{# Bandeau des informations de profil #}
+{% macro profil(pesee, cles) -%}
+    <ul class="profil">
+    {% for cle in cles %}
+        <li>{{ nom(cle) }} : <strong>{{ valeur(pesee.valeurs[cle], cle) }}</strong></li>
+    {% endfor %}
+    </ul>
+{%- endmacro %}

@@ -1,49 +1,67 @@
 {% extends "_base.html" %}
+{% import "_macros.html" as m %}
 
-{% block html_head_title %}Détails de Pesée{% endblock %}
-{% block header %}Détails de Pesée{% endblock %}
+{% block html_head_title %}Détails d'une pesée{% endblock %}
+{% block header %}Détails d'une pesée{% endblock %}
+
+{% block outils %}
+{% if pesees %}
+<div class="selecteur">
+    <label for="peseeSelect">Pesée</label>
+    <select id="peseeSelect">
+    {% for pesee in pesees %}
+        <option value="pesee-{{ loop.index }}">{{ pesee.valeurs["Date"] }} à {{ pesee.valeurs["Heure"] }}</option>
+    {% endfor %}
+    </select>
+</div>
+{% endif %}
+{% endblock %}
 
 {% block content %}
-<!-- Bloc de filtre -->
-<div class="form-group">
-	<label for="filterSelect">Filtrer par jour/date :</label>
-	<select class="form-control" id="dateSelect" onchange="showDetails()">
-	{% for date_heure in dates_heures %}
-		<option value="{{ date_heure }}">{{ date_heure }}</option>
-	{% endfor %}
-	</select>
-</div>
+{% for pesee in pesees %}
+<section class="detail" id="pesee-{{ loop.index }}"{% if not loop.first %} hidden{% endif %}>
+    {{ m.profil(pesee, profil) }}
 
-<!-- Tableaux de résultats -->
-<div id="details">
-{% for date_heure, row in details.items() %}
-	<div class="table-responsive mt-4 detail" id="{{ date_heure }}" style="display:none">
-		<table class="table table-bordered">
-			<tbody>
-			{% for key, value in row.items() %}
-				<tr>
-					<td><b>{{ key }}</b></td>
-					<td>{{ value }}</td>
-				</tr>
-			{% endfor %}
-			</tbody>
-		</table>
-	</div>
+    <!-- Mesures globales -->
+    <h2>Composition globale</h2>
+    <div class="carte" style="padding: 0">
+        <dl class="liste-mesures">
+        {% for cle in globales %}
+            <div>
+                <dt>{{ nom(cle) }}</dt>
+                <dd>{{ m.valeur(pesee.valeurs[cle], cle) }} {{ m.variation(pesee.variations[cle]) }}</dd>
+            </div>
+        {% endfor %}
+        </dl>
+    </div>
+
+    <!-- Répartition par segment -->
+    <h2>Répartition par segment</h2>
+    <div class="segments">
+    {% for segment in segments %}
+        {% set graisse = "Graisse corporelle " ~ segment ~ " (%)" %}
+        {% set muscle = "Masse musculaire " ~ segment ~ " (kg)" %}
+        <div class="carte segment segment-{{ segment|replace(' ', '-') }}">
+            <h3>{{ segment|capitalize }}</h3>
+            <div class="segment-ligne"><span>Graisse</span> <span><strong>{{ pesee.valeurs[graisse]|fr }}</strong> %</span></div>
+            <div class="jauge" aria-hidden="true"><span style="width: {{ [pesee.valeurs[graisse]|float * 2, 100]|min }}%"></span></div>
+            <div class="segment-ligne"><span>Muscle</span> <span><strong>{{ pesee.valeurs[muscle]|fr }}</strong> kg</span></div>
+        </div>
+    {% endfor %}
+    </div>
+    <p class="note">Les côtés droit et gauche sont ceux de la personne pesée, vue de face. La jauge de graisse va de 0 à 50 %.</p>
+</section>
 {% endfor %}
-</div>
 {% endblock %}
 
 {% block script %}
 <script>
-	function showDetails() {
-		var selectedDate = document.getElementById("dateSelect").value;
-		var details = document.getElementsByClassName("detail");
-		for (var i = 0; i < details.length; i++) {
-			details[i].style.display = "none";
-		}
-		document.getElementById(selectedDate).style.display = "block";
-	}
-	// Show the first entry by default
-	document.getElementById("details").firstElementChild.style.display = "block";
+    // Afficher la pesée choisie dans la liste
+    document.getElementById("peseeSelect").addEventListener("change", function () {
+        var sections = document.getElementsByClassName("detail");
+        for (var i = 0; i < sections.length; i++) {
+            sections[i].hidden = sections[i].id !== this.value;
+        }
+    });
 </script>
 {% endblock %}

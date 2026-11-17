@@ -3,45 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block html_head_title %}Rapport TANITA{% endblock %}</title>
-    <link href="lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-	<style>
-		/* Style pour éviter le retour à la ligne dans les cellules du tableau */
-        .table td, .table th {
-            white-space: nowrap;
-        }
-	</style>
+    <title>{% block html_head_title %}Rapport Tanita{% endblock %} · Rapport Tanita</title>
+    <link href="assets/style.css" rel="stylesheet">
 </head>
 <body>
-	<!-- Barre de navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="resultats.html">Rapport TANITA</a>
-        <!-- Bouton de menu pour les petits écrans -->
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <!-- Contenu du menu -->
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mr-auto">
-			{% for page, libelle in {"resultats": "Résultats", "details": "Détails", "evolution": "Evolution"}.items() %}
-                <li class="nav-item{{ ' active' if active_page == page else '' }}">
-                    <a class="nav-link" href="{{ page }}.html">{{ libelle }}</a>
-                </li>
-			{% endfor %}
-            </ul>
+    <!-- En-tête et navigation -->
+    <header class="entete">
+        <div class="entete-contenu">
+            <a class="marque" href="resultats.html">
+                <span class="marque-logo" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="4"/>
+                        <path d="M8 9.5a5.5 5.5 0 0 1 8 0"/>
+                        <path d="M12 9.5 13.5 7.5"/>
+                    </svg>
+                </span>
+                Rapport Tanita
+            </a>
+            <nav class="navigation" aria-label="Pages du rapport">
+            {% for page, libelle in {"resultats": "Résultats", "details": "Détails", "evolution": "Évolution"}.items() %}
+                <a href="{{ page }}.html"{% if active_page == page %} class="actif" aria-current="page"{% endif %}>{{ libelle }}</a>
+            {% endfor %}
+            </nav>
         </div>
-    </nav>
+    </header>
 
     <!-- Contenu principal -->
-    <div class="container mt-4">
-        <h1 class="mb-4">{% block header %}{% endblock %}</h1>
-		
-        {% block content %}{% endblock %}
-    </div>
+    <main class="page">
+        <div class="titre-page">
+            <div>
+                <h1>{% block header %}{% endblock %}</h1>
+                {% block sous_titre %}{% endblock %}
+            </div>
+            {% block outils %}{% endblock %}
+        </div>
 
-    <script src="lib/jquery/jquery-3.5.1.slim.min.js"></script>
-    <script src="lib/bootstrap/bootstrap.min.js"></script>
-	
-	{% block script %}{% endblock %}
+        {% if pesees %}
+            {% block content %}{% endblock %}
+        {% else %}
+            <p class="vide">Aucune pesée trouvée dans <code>TANITA/GRAPHV1/DATA/DATA1.CSV</code>.</p>
+        {% endif %}
+    </main>
+
+    <footer class="pied">
+        Rapport généré le {{ genere_le }} à partir de {{ pesees|length }} pesée{{ "s" if pesees|length > 1 }}.
+    </footer>
+
+    {% block script %}{% endblock %}
 </body>
 </html>

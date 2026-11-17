@@ -2,5 +2,5 @@
 /TANITA/
 
 # Pages générées : contiennent des données personnelles (mesures de la balance)
-# Les librairies de rapport/lib/ restent versionnées
+# La feuille de style de rapport/assets/ reste versionnée
 /rapport/*.html

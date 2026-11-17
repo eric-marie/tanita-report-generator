@@ -1,25 +1,49 @@
 {% extends "_base.html" %}
+{% import "_macros.html" as m %}
 
-{% block html_head_title %}Résultats TANITA{% endblock %}
-{% block header %}Résultats TANITA{% endblock %}
+{% block html_head_title %}Résultats{% endblock %}
+{% block header %}Résultats{% endblock %}
+{% block sous_titre %}
+    {% if derniere %}<p class="sous-titre">Dernière pesée le {{ derniere.valeurs["Date"] }} à {{ derniere.valeurs["Heure"] }}</p>{% endif %}
+{% endblock %}
 
 {% block content %}
-<table class="table table-bordered table-responsive">
-	<tbody>
-	{% for resultat in resultats %}
-		<tr>
-		{% for key, idx in indices %}
-			<td>{{ resultat[idx] }}</td>
-		{% endfor %}
-		</tr>
-	{% endfor %}
-	</tbody>
-	<thead>
-		<tr>
-		{% for indicator in indicators %}
-			<th>{{ indicator }}</th>
-		{% endfor %}
-		</tr>
-	</thead>
-</table>
+{{ m.profil(derniere, ["Modèle", "Sexe", "Âge", "Taille (cm)"]) }}
+
+<!-- Mesures principales de la dernière pesée -->
+<h2>Dernière pesée</h2>
+<div class="grille-cartes">
+{% for cle in cles %}
+    <div class="carte">
+        <div class="carte-libelle">{{ nom(cle) }}</div>
+        <div class="carte-valeur">{{ m.valeur(derniere.valeurs[cle], cle) }}</div>
+        <div class="carte-pied">{{ m.variation(derniere.variations[cle]) }}{% if derniere.variations[cle] %} vs précédente{% endif %}</div>
+    </div>
+{% endfor %}
+</div>
+
+<!-- Historique complet -->
+<h2>Toutes les pesées</h2>
+<div class="tableau-conteneur">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+            {% for cle in mesures %}
+                <th>{{ nom(cle) }}{% if unite(cle) %}<span class="unite">{{ unite(cle) }}</span>{% endif %}</th>
+            {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for pesee in pesees %}
+            <tr>
+                {{ m.cellule_date(pesee) }}
+            {% for cle in mesures %}
+                <td>{{ pesee.valeurs[cle]|fr }}</td>
+            {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

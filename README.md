@@ -32,8 +32,14 @@ tanita-report-generator/
 │       └── DATA/
 │           └── DATA1.CSV    ← mesures du profil utilisateur n°1
 ├── rapport/                 ← pages générées (ignorées par Git)
-│   └── lib/                 ← copies locales de Bootstrap et jQuery (versionnées)
-├── templates/
+│   └── assets/
+│       └── style.css        ← feuille de style des pages (versionnée)
+├── templates/               ← templates Jinja2 des pages
+│   ├── _base.html           ← structure commune (en-tête, navigation, pied de page)
+│   ├── _macros.html         ← éléments réutilisables (variations, valeurs, profil)
+│   ├── resultats.html
+│   ├── details.html
+│   └── evolution.html
 └── generate_report.py
 ```
 
@@ -50,34 +56,32 @@ python generate_report.py
 
 1. Il lit `TANITA/GRAPHV1/DATA/DATA1.CSV`, une ligne par pesée.
 2. Il extrait 26 indicateurs selon leur position dans la ligne : date, heure, sexe, âge, taille, niveau d'activité, poids, IMC, masse grasse (totale et par bras, jambe et buste), masse musculaire (totale et par segment), masse osseuse, graisse viscérale, apport calorique quotidien, âge métabolique et eau corporelle.
-3. Il génère les pages HTML à partir des templates Jinja2 du dossier `templates/`, mis en forme avec Bootstrap 4. Les pesées sont classées de la plus récente à la plus ancienne.
+3. Il classe les pesées de la plus récente à la plus ancienne et calcule, pour chaque mesure, la variation par rapport à la pesée précédente. Pour la page d'évolution, il calcule aussi le minimum, le maximum et la variation totale de chaque mesure.
+4. Il génère les pages HTML à partir des templates Jinja2 du dossier `templates/`. Les nombres sont affichés avec une virgule décimale, et le sexe en clair (« Homme » ou « Femme ») au lieu du code de la balance.
 
 > Seul le profil n°1 (`DATA1.CSV`) est lu. La balance peut gérer jusqu'à 8 profils (`DATA1.CSV` à `DATA8.CSV`).
 
 ## Fichiers générés
 
-Les trois pages sont créées dans le dossier `rapport/` du projet, à côté du dossier `lib/` qui contient les librairies qu'elles utilisent. Les pages sont reliées entre elles par une barre de navigation :
+Les trois pages sont créées dans le dossier `rapport/` du projet, à côté de la feuille de style `assets/style.css`. Elles sont reliées entre elles par une barre de navigation :
 
 | Fichier | Contenu |
 |---|---|
-| `resultats.html` | Tableau de toutes les pesées, avec l'ensemble des indicateurs en colonnes. |
-| `details.html` | Détail d'une pesée choisie dans une liste déroulante (date et heure). |
-| `evolution.html` | Historique des valeurs d'un indicateur choisi dans une liste déroulante (du poids à l'eau corporelle). |
+| `resultats.html` | Profil, cartes des 8 mesures principales de la dernière pesée avec leur variation, puis tableau de toutes les pesées. |
+| `details.html` | Détail d'une pesée choisie dans une liste déroulante : profil, composition globale avec variations, et répartition de la graisse et du muscle par segment (bras, jambes, buste). |
+| `evolution.html` | Pour une mesure choisie dans une liste déroulante : dernière valeur, minimum, maximum, variation totale, puis historique avec la variation entre chaque pesée. |
 
 Il suffit d'ouvrir `rapport/resultats.html` dans un navigateur. Aucune connexion Internet n'est nécessaire.
 
-### Librairies locales
+### Mise en forme
 
-Les pages n'utilisent aucun CDN : les librairies sont copiées dans `rapport/lib/` et versionnées avec le projet.
+Les pages n'utilisent aucune librairie externe : toute la mise en forme est dans `rapport/assets/style.css`, versionnée avec le projet, et le peu de JavaScript nécessaire (listes déroulantes) est écrit directement dans les templates.
 
-| Fichier | Librairie | Source |
-|---|---|---|
-| `lib/bootstrap/bootstrap.min.css` | Bootstrap 4.5.2 (styles) | `cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/` |
-| `lib/bootstrap/bootstrap.min.js` | Bootstrap 4.5.2 (menu repliable sur petit écran) | `cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/` |
-| `lib/jquery/jquery-3.5.1.slim.min.js` | jQuery 3.5.1 slim, requis par Bootstrap 4 | `code.jquery.com` |
+- Les pages s'adaptent aux petits écrans et suivent le mode clair ou sombre du système.
+- Les variations sont affichées avec une flèche et une couleur neutre : une hausse ou une baisse n'est ni bonne ni mauvaise en soi (une baisse de la graisse n'a pas le même sens qu'une baisse de la masse musculaire).
 
-Si le dossier `rapport/lib/` est supprimé, il faut le récupérer depuis Git (`git checkout -- rapport/lib`).
+Si le dossier `rapport/assets/` est supprimé, il faut le récupérer depuis Git (`git checkout -- rapport/assets`).
 
 ## Données personnelles
 
-Les pages générées contiennent des données de santé (poids, composition corporelle, âge…). Les fichiers HTML du dossier `rapport/` sont donc **exclus du dépôt** par le `.gitignore`, tout comme le dossier `TANITA`. Seuls le script, les templates et les librairies sont versionnés.
+Les pages générées contiennent des données de santé (poids, composition corporelle, âge…). Les fichiers HTML du dossier `rapport/` sont donc **exclus du dépôt** par le `.gitignore`, tout comme le dossier `TANITA`. Seuls le script, les templates et la feuille de style sont versionnés.
