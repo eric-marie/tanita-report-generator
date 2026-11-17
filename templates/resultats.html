@@ -24,9 +24,9 @@
 <h2>Dernière pesée</h2>
 <p class="note note-section">
 {% if semaine and semaine.nb %}
-    Variations : écart avec la moyenne {{ "de la pesée" if semaine.nb == 1 else "des " ~ semaine.nb ~ " pesées" }} de la semaine précédente (du {{ semaine.debut }} au {{ semaine.fin }}).
+    Variations : écart avec {{ "la seule pesée" if semaine.nb == 1 else "la moyenne des " ~ semaine.nb ~ " pesées" }} des 7 jours précédant la dernière pesée (depuis le {{ semaine.debut }}).
 {% elif semaine %}
-    Aucune pesée la semaine précédente (du {{ semaine.debut }} au {{ semaine.fin }}) : pas de variation à afficher.
+    Aucune pesée dans les 7 jours précédant la dernière pesée (depuis le {{ semaine.debut }}) : pas de variation à afficher.
 {% endif %}
 </p>
 <div class="grille-cartes grille-cartes-larges">

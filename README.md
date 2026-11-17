@@ -166,7 +166,7 @@ De haut en bas :
 1. **Profil** : modèle, sexe, âge, taille.
 2. **Bilan depuis la première pesée** : variation du poids et sa répartition entre masse grasse et masse maigre (muscles et os).
 3. **Cartes de la dernière pesée**, regroupées comme les cases de la page Détails : poids ; IMC et indice de masse musculaire ; graisse corporelle (%) et masse grasse (kg) ; masse maigre, masse musculaire et masse osseuse ; eau corporelle ; graisse viscérale ; apport calorique quotidien ; métabolisme de base ; âge métabolique. Chaque carte affiche :
-   - la **variation par rapport à la moyenne des pesées de la semaine précédente** (semaine calendaire du lundi au dimanche, comme la précision « Semaine » de la page Évolution). S'il n'y a eu aucune pesée cette semaine-là, la page le signale et n'affiche pas de variation. Les mesures entières (graisse viscérale, âge métabolique) gagnent une décimale, puisqu'on les compare à une moyenne ;
+   - la **variation par rapport à la moyenne des pesées des 7 jours glissants qui précèdent la dernière pesée** : toutes les pesées faites entre l'instant de la dernière pesée moins 7 jours et cette dernière pesée (exclue), y compris une pesée faite quelques minutes plus tôt le même jour. S'il n'y en a aucune, la page le signale et n'affiche pas de variation. Les mesures entières (graisse viscérale, âge métabolique) gagnent une décimale, puisqu'on les compare à une moyenne ;
    - une **mini-courbe de tendance** : moyenne par jour sur les 60 derniers jours de pesée, affichée à partir de 2 jours. Comme pour le graphique d'évolution, son échelle couvre au moins 10 fois la précision de la balance, pour qu'une infime variation ne fasse pas un pic ;
    - le **repère** du guide Tanita le cas échéant.
 

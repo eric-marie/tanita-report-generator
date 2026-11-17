@@ -513,19 +513,17 @@ class TanitaReportGenerator:
             tendances[cle] = {"trace": "M" + "L".join(xy(p) for p in points), "nb_jours": len(points)}
         return tendances
 
-    # Variation de la dernière pesée par rapport à la moyenne des pesées de la semaine calendaire
-    # précédente (du lundi au dimanche, comme la précision « Semaine » de la page d'évolution)
+    # Variation de la dernière pesée par rapport à la moyenne des pesées des 7 jours glissants
+    # qui la précèdent (de l'instant de la dernière pesée moins 7 jours jusqu'à elle, exclue)
     @staticmethod
     def _comparaisonSemaine(pesees, cles):
         if not pesees or not all(p["moment"] for p in pesees):
             return None
         derniere = pesees[0]
-        lundi = derniere["moment"].date() - timedelta(days=derniere["moment"].weekday())
-        debut = lundi - timedelta(days=7)
-        semaine = [p for p in pesees if debut <= p["moment"].date() < lundi]
+        debut = derniere["moment"] - timedelta(days=7)
+        semaine = [p for p in pesees[1:] if debut <= p["moment"] < derniere["moment"]]
 
-        comparaison = {"debut": debut.strftime("%d/%m/%Y"), "fin": (lundi - timedelta(days=1)).strftime("%d/%m/%Y"),
-                       "nb": len(semaine), "variations": {}}
+        comparaison = {"debut": debut.strftime("%d/%m/%Y à %H:%M"), "nb": len(semaine), "variations": {}}
         for cle in cles:
             actuelle = TanitaReportGenerator._toFloat(derniere["valeurs"][cle])
             nombres = [n for n in (TanitaReportGenerator._toFloat(p["valeurs"][cle]) for p in semaine) if n is not None]
