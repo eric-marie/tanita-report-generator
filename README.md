@@ -46,6 +46,8 @@ tanita-report-generator/
 │   ├── resultats.html
 │   ├── details.html
 │   └── evolution.html
+├── outils/
+│   └── generer_profil_test.py  ← génère un profil de test fictif
 ├── profils.example.json     ← modèle pour nommer les profils (versionné)
 ├── profils.json             ← noms des profils, facultatif (ignoré par Git)
 └── generate_report.py
@@ -72,6 +74,32 @@ Le script doit être exécuté **depuis le dossier du projet**, car les chemins 
 cd tanita-report-generator
 python generate_report.py
 ```
+
+### Générer un profil de test
+
+Pour essayer le rapport sans balance, ou avec un historique de plusieurs semaines, `outils/generer_profil_test.py` crée un profil fictif au format de la carte SD : `SYSTEM/PROFn.CSV` et `DATA/DATAn.CSV` dans le dossier `TANITA` (créé s'il n'existe pas), avec une pesée par matin entre deux dates. Il ajoute aussi le nom du profil dans `profils.json`.
+
+```bash
+python outils/generer_profil_test.py
+python generate_report.py
+```
+
+Par défaut, il crée le profil 2 « Test » : un homme de 40 ans, 180 cm, niveau d'activité 2, qui part de 100 kg et perd environ 2 kg par semaine. Il fait une pesée chaque matin du 01/09/2026 à aujourd'hui. La perte se répartit à environ 70 % en graisse et 30 % en masse maigre, avec un peu de bruit quotidien (hydratation). Les autres mesures en découlent de façon plausible, mais elles sont fictives et ne reproduisent pas les calculs de la balance.
+
+Principales options (`--help` pour la liste complète) :
+
+| Option | Rôle | Défaut |
+|---|---|---|
+| `--profil` | numéro du profil (1 à 4) | 2 |
+| `--nom` | nom dans `profils.json` (`""` pour ne rien écrire) | Test |
+| `--sexe`, `--naissance`, `--taille`, `--activite` | profil de la personne | homme, 15/03/1986, 180, 2 |
+| `--poids`, `--graisse` | poids (kg) et graisse corporelle (%) de départ | 100 ; 28,5 (homme) ou 38 (femme) |
+| `--perte-semaine` | perte par semaine en kg, négative pour une prise | 2 |
+| `--debut`, `--fin` | première et dernière pesée (jj/mm/aaaa) | 01/09/2026, aujourd'hui |
+| `--graine` | graine du hasard (mêmes valeurs à chaque exécution) | 20260901 |
+| `--forcer` | écraser un profil qui contient déjà des données | — |
+
+Par sécurité, le script **refuse d'écraser un profil qui contient déjà des données** (par exemple les vraies pesées du profil 1), sauf avec `--forcer`. **Ne recopiez pas un dossier `TANITA` contenant un profil de test sur la carte SD de la balance.** Pour supprimer un profil de test, videz ses deux fichiers et retirez son nom de `profils.json`.
 
 ### Ce que fait le script
 
@@ -215,4 +243,4 @@ Les pages générées contiennent des données de santé (poids, composition cor
 - le fichier `profils.json` (noms des profils) ;
 - les pages HTML de `rapport/` et les dossiers `rapport/profil-n/`.
 
-Seuls le script, les templates, les fichiers de `rapport/assets/` (feuille de style et scripts) et le modèle `profils.example.json` sont versionnés.
+Seuls le script, l'outil `outils/generer_profil_test.py`, les templates, les fichiers de `rapport/assets/` (feuille de style et scripts) et le modèle `profils.example.json` sont versionnés.
