@@ -1,0 +1,55 @@
+{% extends "_base.html" %}
+
+{% block html_head_title %}Évolution des Indicateurs{% endblock %}
+{% block header %}Évolution des Indicateurs{% endblock %}
+
+{% block content %}
+<!-- Bloc de filtre -->
+<div class="form-group">
+	<label for="filterSelect">Filtrer par :</label>
+	<select class="form-control" id="indicatorSelect" onchange="showEvolution()">
+	{% for indicator in indicators %}
+		<option value="{{ indicator }}">{{ indicator }}</option>
+	{% endfor %}
+	</select>
+</div>
+
+<!-- Tableaux de résultats -->
+<div id="evolution">
+{% for indicator, values in evolution.items() %}
+	<div class="table-responsive mt-4 evolution" id="{{ indicator }}" style="display:none">
+		<table class="table table-bordered">
+			<tbody>
+			{% for date_heure, value in values.items() %}
+				<tr>
+					<td>{{ date_heure }}</td>
+					<td>{{ value }}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+			<thead>
+				<tr>
+					<th>Date/Heure</th>
+					<th>Valeur</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+	function showEvolution() {
+		var selectedIndicator = document.getElementById("indicatorSelect").value;
+		var evolutions = document.getElementsByClassName("evolution");
+		for (var i = 0; i < evolutions.length; i++) {
+			evolutions[i].style.display = "none";
+		}
+		document.getElementById(selectedIndicator).style.display = "block";
+	}
+	// Show the first indicator by default
+	document.getElementById("evolution").firstElementChild.style.display = "block";
+</script>
+{% endblock %}

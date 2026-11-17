@@ -1,0 +1,25 @@
+{% extends "_base.html" %}
+
+{% block html_head_title %}Résultats TANITA{% endblock %}
+{% block header %}Résultats TANITA{% endblock %}
+
+{% block content %}
+<table class="table table-bordered table-responsive">
+	<tbody>
+	{% for resultat in resultats %}
+		<tr>
+		{% for key, idx in indices %}
+			<td>{{ resultat[idx] }}</td>
+		{% endfor %}
+		</tr>
+	{% endfor %}
+	</tbody>
+	<thead>
+		<tr>
+		{% for indicator in indicators %}
+			<th>{{ indicator }}</th>
+		{% endfor %}
+		</tr>
+	</thead>
+</table>
+{% endblock %}

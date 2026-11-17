@@ -1,0 +1,49 @@
+{% extends "_base.html" %}
+
+{% block html_head_title %}Détails de Pesée{% endblock %}
+{% block header %}Détails de Pesée{% endblock %}
+
+{% block content %}
+<!-- Bloc de filtre -->
+<div class="form-group">
+	<label for="filterSelect">Filtrer par jour/date :</label>
+	<select class="form-control" id="dateSelect" onchange="showDetails()">
+	{% for date_heure in dates_heures %}
+		<option value="{{ date_heure }}">{{ date_heure }}</option>
+	{% endfor %}
+	</select>
+</div>
+
+<!-- Tableaux de résultats -->
+<div id="details">
+{% for date_heure, row in details.items() %}
+	<div class="table-responsive mt-4 detail" id="{{ date_heure }}" style="display:none">
+		<table class="table table-bordered">
+			<tbody>
+			{% for key, value in row.items() %}
+				<tr>
+					<td><b>{{ key }}</b></td>
+					<td>{{ value }}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+	</div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+	function showDetails() {
+		var selectedDate = document.getElementById("dateSelect").value;
+		var details = document.getElementsByClassName("detail");
+		for (var i = 0; i < details.length; i++) {
+			details[i].style.display = "none";
+		}
+		document.getElementById(selectedDate).style.display = "block";
+	}
+	// Show the first entry by default
+	document.getElementById("details").firstElementChild.style.display = "block";
+</script>
+{% endblock %}
