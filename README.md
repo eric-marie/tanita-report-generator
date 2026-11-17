@@ -16,10 +16,10 @@ La balance BC-601 enregistre chaque pesée sur une carte SD, dans des fichiers C
 ### Prérequis
 
 - Python 3
-- [Jinja2](https://pypi.org/project/Jinja2/) :
+- [Jinja2](https://pypi.org/project/Jinja2/), seule dépendance, listée dans `requirements.txt` :
 
 ```bash
-pip install jinja2
+pip install -r requirements.txt
 ```
 
 ### Organisation attendue des dossiers
@@ -50,6 +50,7 @@ tanita-report-generator/
 │   └── generer_profil_test.py  ← génère un profil de test fictif
 ├── profils.example.json     ← modèle pour nommer les profils (versionné)
 ├── profils.json             ← noms des profils, facultatif (ignoré par Git)
+├── requirements.txt         ← dépendances Python (Jinja2)
 └── generate_report.py
 ```
 
@@ -68,11 +69,14 @@ Les clés sont les numéros de profil sur la balance. Un profil absent du fichie
 
 ### Lancer la génération
 
-Le script doit être exécuté **depuis le dossier du projet**, car les chemins sont relatifs au dossier courant :
+```bash
+python generate_report.py
+```
+
+Le script peut être lancé **depuis n'importe quel dossier** (double-clic, raccourci, tâche planifiée…) : il retrouve le dossier `TANITA`, les templates et `profils.json` à partir de son propre emplacement, et écrit toujours le rapport dans le dossier `rapport/` du projet. Par exemple, depuis le dossier parent :
 
 ```bash
-cd tanita-report-generator
-python generate_report.py
+python tanita-report-generator/generate_report.py
 ```
 
 ### Générer un profil de test

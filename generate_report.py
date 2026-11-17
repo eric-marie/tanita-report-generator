@@ -174,9 +174,10 @@ class TanitaReportGenerator:
         self._chargerNoms()
         self._chargerProfils()
 
-    # Définir les chemins utilisés
+    # Définir les chemins utilisés, à partir du dossier du script : le script fonctionne ainsi
+    # quel que soit le dossier depuis lequel il est lancé (double-clic, raccourci, tâche planifiée…)
     def _definePathes(self):
-        racine = os.getcwd()
+        racine = os.path.dirname(os.path.abspath(__file__))
         self.template_dir = os.path.join(racine, "templates")
         self.tanita_dir = os.path.join(racine, "TANITA", "GRAPHV1")
         self.noms_path = os.path.join(racine, "profils.json")
