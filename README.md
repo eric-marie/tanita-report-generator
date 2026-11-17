@@ -31,6 +31,7 @@ tanita-report-generator/
 │   └── GRAPHV1/
 │       └── DATA/
 │           └── DATA1.CSV    ← mesures du profil utilisateur n°1
+├── rapport/                 ← pages générées (créé par le script, ignoré par Git)
 ├── templates/
 └── generate_report.py
 ```
@@ -54,7 +55,7 @@ python generate_report.py
 
 ## Fichiers générés
 
-Les trois pages sont créées à la racine du projet et reliées entre elles par une barre de navigation :
+Les trois pages sont créées dans le dossier `rapport/` du projet, que le script crée s'il n'existe pas. Elles sont reliées entre elles par une barre de navigation :
 
 | Fichier | Contenu |
 |---|---|
@@ -62,8 +63,8 @@ Les trois pages sont créées à la racine du projet et reliées entre elles par
 | `details.html` | Détail d'une pesée choisie dans une liste déroulante (date et heure). |
 | `evolution.html` | Historique des valeurs d'un indicateur choisi dans une liste déroulante (du poids à l'eau corporelle). |
 
-Il suffit d'ouvrir `resultats.html` dans un navigateur. Une connexion Internet est nécessaire pour charger Bootstrap et Font Awesome depuis leurs CDN.
+Il suffit d'ouvrir `rapport/resultats.html` dans un navigateur. Une connexion Internet est nécessaire pour charger Bootstrap et Font Awesome depuis leurs CDN.
 
 ## Données personnelles
 
-Les pages générées contiennent des données de santé (poids, composition corporelle, âge…). Elles sont donc **exclues du dépôt** par le `.gitignore`, tout comme le dossier `TANITA`. Seuls le script et les templates sont versionnés.
+Les pages générées contiennent des données de santé (poids, composition corporelle, âge…). Le dossier `rapport/` est donc **exclu du dépôt** par le `.gitignore`, tout comme le dossier `TANITA`. Seuls le script et les templates sont versionnés.
