@@ -41,7 +41,7 @@ class TanitaReportGenerator:
     # Définir les chemins utilisés
     def _definePathes(self):
         self.template_dir = os.path.join(os.getcwd(), "templates")
-        self.csv_path = os.path.join(os.getcwd(), "..", "TANITA", "GRAPHV1", "DATA", "DATA1.CSV")
+        self.csv_path = os.path.join(os.getcwd(), "TANITA", "GRAPHV1", "DATA", "DATA1.CSV")
         self.html_resultats_path = os.path.join(os.getcwd(), "resultats.html")
         self.html_details_path = os.path.join(os.getcwd(), "details.html")
         self.html_evolution_path = os.path.join(os.getcwd(), "evolution.html")

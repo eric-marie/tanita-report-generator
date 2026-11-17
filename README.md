@@ -23,17 +23,16 @@ pip install jinja2
 
 ### Organisation attendue des dossiers
 
-Le script lit les données dans un dossier `TANITA` placé **à côté** de ce projet, c'est-à-dire une copie du contenu de la carte SD de la balance :
+Le script lit les données dans un dossier `TANITA` placé **à la racine du projet**. Il s'agit d'une copie du contenu de la carte SD de la balance : il suffit de copier le dossier `TANITA` de la carte dans le projet.
 
 ```
-Tanita Project/
-├── TANITA/                      ← copie de la carte SD (non versionnée)
+tanita-report-generator/
+├── TANITA/                  ← copie de la carte SD (ignorée par Git)
 │   └── GRAPHV1/
 │       └── DATA/
-│           └── DATA1.CSV        ← mesures du profil utilisateur n°1
-└── tanita-report-generator/     ← ce dépôt
-    ├── generate_report.py
-    └── templates/
+│           └── DATA1.CSV    ← mesures du profil utilisateur n°1
+├── templates/
+└── generate_report.py
 ```
 
 ### Lancer la génération
@@ -47,7 +46,7 @@ python generate_report.py
 
 ### Ce que fait le script
 
-1. Il lit `../TANITA/GRAPHV1/DATA/DATA1.CSV`, une ligne par pesée.
+1. Il lit `TANITA/GRAPHV1/DATA/DATA1.CSV`, une ligne par pesée.
 2. Il extrait 26 indicateurs selon leur position dans la ligne : date, heure, sexe, âge, taille, niveau d'activité, poids, IMC, masse grasse (totale et par bras, jambe et buste), masse musculaire (totale et par segment), masse osseuse, graisse viscérale, apport calorique quotidien, âge métabolique et eau corporelle.
 3. Il génère les pages HTML à partir des templates Jinja2 du dossier `templates/`, mis en forme avec Bootstrap 4. Les pesées sont classées de la plus récente à la plus ancienne.
 
@@ -67,4 +66,4 @@ Il suffit d'ouvrir `resultats.html` dans un navigateur. Une connexion Internet e
 
 ## Données personnelles
 
-Les pages générées contiennent des données de santé (poids, composition corporelle, âge…). Elles sont donc **exclues du dépôt** par le `.gitignore`, tout comme le dossier `TANITA`, qui se trouve en dehors du projet. Seuls le script et les templates sont versionnés.
+Les pages générées contiennent des données de santé (poids, composition corporelle, âge…). Elles sont donc **exclues du dépôt** par le `.gitignore`, tout comme le dossier `TANITA`. Seuls le script et les templates sont versionnés.
