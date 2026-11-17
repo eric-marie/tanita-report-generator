@@ -2,4 +2,6 @@
 /TANITA/
 
 # Pages générées : contiennent des données personnelles (mesures de la balance)
-/rapport/
+# Le dossier est versionné vide grâce au .gitkeep
+/rapport/*
+!/rapport/.gitkeep
