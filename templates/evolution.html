@@ -43,8 +43,15 @@
         </div>
     </div>
 
+    <!-- Graphique (dessiné par assets/graphique.js) -->
+    <h2>{{ nom(cle) }}{% if unite(cle) %} ({{ unite(cle) }}){% endif %}</h2>
+    <div class="carte carte-graphique">
+        <div class="graphique" data-index="{{ loop.index0 }}"></div>
+        <noscript><p class="note">Le graphique nécessite JavaScript. Les valeurs sont dans le tableau ci-dessous.</p></noscript>
+    </div>
+
     <!-- Historique -->
-    <h2>{{ nom(cle) }}</h2>
+    <h2>Historique</h2>
     <div class="tableau-conteneur">
         <table>
             <thead>
@@ -70,6 +77,8 @@
 {% endblock %}
 
 {% block script %}
+<script type="application/json" id="donnees-graphiques">{{ graphiques|tojson }}</script>
+<script src="{{ racine }}assets/graphique.js"></script>
 <script>
     // Afficher la mesure choisie dans la liste
     document.getElementById("mesureSelect").addEventListener("change", function () {
@@ -77,6 +86,7 @@
         for (var i = 0; i < sections.length; i++) {
             sections[i].hidden = sections[i].id !== this.value;
         }
+        if (window.dessinerGraphiques) window.dessinerGraphiques();
     });
 </script>
 {% endblock %}

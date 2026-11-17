@@ -35,8 +35,9 @@ tanita-report-generator/
 │       └── DATA/
 │           └── DATA1.CSV … DATA8.CSV   ← pesées des profils 1 à 8
 ├── rapport/                 ← pages générées (ignorées par Git)
-│   └── assets/
-│       └── style.css        ← feuille de style des pages (versionnée)
+│   └── assets/              ← versionné
+│       ├── style.css        ← feuille de style des pages
+│       └── graphique.js     ← dessin des graphiques de la page Évolution
 ├── templates/               ← templates Jinja2 des pages
 │   ├── _base.html           ← structure commune (en-tête, navigation, pied de page)
 │   ├── _macros.html         ← éléments réutilisables (variations, valeurs, profil)
@@ -79,7 +80,7 @@ python generate_report.py
 
    Un profil qui a **au moins une pesée** est considéré comme utilisé et reçoit son propre rapport. Un profil configuré mais sans pesée est seulement signalé sur la page d'accueil. Les autres sont ignorés.
 2. **Il lit les pesées** de chaque profil, une ligne par pesée, et en extrait 26 indicateurs selon leur position dans la ligne : date, heure, sexe, âge, taille, niveau d'activité, poids, IMC, masse grasse (totale et par bras, jambe et buste), masse musculaire (totale et par segment), masse osseuse, graisse viscérale, apport calorique quotidien, âge métabolique et eau corporelle.
-3. **Il calcule les variations.** Les pesées sont classées de la plus récente à la plus ancienne et, pour chaque mesure, il calcule la variation par rapport à la pesée précédente. Pour la page d'évolution, il calcule aussi le minimum, le maximum et la variation totale de chaque mesure.
+3. **Il calcule les variations.** Les pesées sont classées de la plus récente à la plus ancienne et, pour chaque mesure, il calcule la variation par rapport à la pesée précédente. Pour la page d'évolution, il calcule aussi le minimum, le maximum et la variation totale de chaque mesure, et prépare les points des graphiques (date et heure de chaque pesée, valeur, précision de la mesure).
 4. **Il génère les pages HTML** à partir des templates Jinja2 du dossier `templates/`. Les nombres sont affichés avec une virgule décimale, et le sexe en clair (« Homme » ou « Femme ») au lieu du code de la balance. Les dossiers de profil d'une génération précédente sont supprimés au préalable, pour ne pas garder un profil qui n'existe plus.
 
 Le script affiche ensuite les profils trouvés et le nombre de pesées de chacun.
@@ -98,7 +99,8 @@ rapport/
 ├── profil-3/                ← un dossier par profil ayant des pesées
 │   └── …
 └── assets/
-    └── style.css
+    ├── style.css
+    └── graphique.js
 ```
 
 | Fichier | Contenu |
@@ -106,7 +108,7 @@ rapport/
 | `index.html` | Liste des profils trouvés : nom, sexe, âge, taille, dernier poids, date de la dernière pesée et nombre de pesées. Les profils configurés sans pesée y sont signalés. **S'il n'y a qu'un seul profil**, cette page redirige directement vers son rapport. |
 | `profil-n/resultats.html` | Profil, cartes des 8 mesures principales de la dernière pesée avec leur variation, puis tableau de toutes les pesées. |
 | `profil-n/details.html` | Détail d'une pesée choisie dans une liste déroulante : profil, composition globale avec variations, et répartition de la graisse et du muscle par segment (bras, jambes, buste). |
-| `profil-n/evolution.html` | Pour une mesure choisie dans une liste déroulante : dernière valeur, minimum, maximum, variation totale, puis historique avec la variation entre chaque pesée. |
+| `profil-n/evolution.html` | Pour une mesure choisie dans une liste déroulante : dernière valeur, minimum, maximum, variation totale, **graphique de l'évolution**, puis historique avec la variation entre chaque pesée. |
 
 Dans les pages d'un profil, l'en-tête affiche le nom du profil, un lien « Changer » vers la page d'accueil (s'il y a plusieurs profils) et la navigation entre les trois pages.
 
@@ -114,12 +116,22 @@ Il suffit d'ouvrir `rapport/index.html` dans un navigateur. Aucune connexion Int
 
 ### Mise en forme
 
-Les pages n'utilisent aucune librairie externe : toute la mise en forme est dans `rapport/assets/style.css`, versionnée avec le projet, et le peu de JavaScript nécessaire (listes déroulantes) est écrit directement dans les templates.
+Les pages n'utilisent aucune librairie externe : la mise en forme est dans `rapport/assets/style.css`, le dessin des graphiques dans `rapport/assets/graphique.js`, tous deux versionnés avec le projet. Le reste du JavaScript (listes déroulantes) est écrit directement dans les templates.
 
 - Les pages s'adaptent aux petits écrans et suivent le mode clair ou sombre du système.
 - Les variations sont affichées avec une flèche et une couleur neutre : une hausse ou une baisse n'est ni bonne ni mauvaise en soi (une baisse de la graisse n'a pas le même sens qu'une baisse de la masse musculaire).
 
 Si le dossier `rapport/assets/` est supprimé, il faut le récupérer depuis Git (`git checkout -- rapport/assets`).
+
+### Graphique d'évolution
+
+Le graphique de la page Évolution est une courbe SVG dessinée dans le navigateur par `graphique.js`, à partir des données intégrées à la page par le script Python.
+
+- **Axe horizontal** : le vrai calendrier. L'écart entre deux points correspond au temps écoulé entre les pesées. Si une date est illisible, les pesées sont espacées régulièrement.
+- **Axe vertical** : il ne part pas de zéro, il est cadré sur les valeurs de la mesure. Les graduations ne sont jamais plus précises que la balance (pas de 0,25 kg pour une mesure au dixième), et l'étendue couvre au moins 10 fois cette précision, pour qu'une variation de 0,1 kg n'apparaisse pas comme une chute vertigineuse.
+- **Lecture** : la dernière valeur est écrite au bout de la courbe. Au survol, un curseur vertical et une bulle donnent la valeur, la date et l'heure de la pesée la plus proche. Au clavier, le graphique prend le focus avec Tab, et les flèches gauche et droite parcourent les pesées.
+- **Couleur** : la courbe utilise la variable CSS `--serie` (`#2f6fde` en mode clair, `#5b8ff8` en mode sombre). Ces deux teintes ont été vérifiées contre leur fond (plage de luminosité, saturation et contraste d'au moins 3:1).
+- Le tableau d'historique sous le graphique reste la version texte des mêmes valeurs.
 
 ## Données personnelles
 

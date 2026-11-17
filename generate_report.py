@@ -262,7 +262,48 @@ class TanitaReportGenerator:
         self._render("evolution.html", os.path.join(dossier, "evolution.html"),
                      mesures=TanitaReportGenerator.MESURES,
                      statistiques=statistiques,
+                     graphiques=TanitaReportGenerator._graphiques(profil["pesees"]),
                      **self._contexte("evolution", profil))
+
+    # Points des graphiques de la page d'évolution, une série par mesure (dans l'ordre de MESURES),
+    # du plus ancien au plus récent. "t" est l'instant de la pesée en millisecondes, ou None si la
+    # date est illisible : le graphique espace alors les pesées régulièrement.
+    @staticmethod
+    def _graphiques(pesees):
+        chronologie = list(reversed(pesees))
+        instants = []
+        for pesee in chronologie:
+            try:
+                moment = datetime.strptime(f"{pesee['valeurs']['Date']} {pesee['valeurs']['Heure']}", "%d/%m/%Y %H:%M:%S")
+                instants.append((moment - datetime(1970, 1, 1)).total_seconds() * 1000)
+            except ValueError:
+                instants.append(None)
+        if None in instants:
+            instants = [None] * len(instants)
+
+        graphiques = []
+        for key in TanitaReportGenerator.MESURES:
+            points = []
+            for pesee, instant in zip(chronologie, instants):
+                nombre = TanitaReportGenerator._toFloat(pesee["valeurs"][key])
+                if nombre is None:
+                    continue
+                points.append({
+                    "t": instant,
+                    "v": nombre,
+                    "texte": TanitaReportGenerator._formatFr(pesee["valeurs"][key]),
+                    "date": pesee["valeurs"]["Date"],
+                    "heure": pesee["valeurs"]["Heure"],
+                })
+            # Précision des mesures (nombre de décimales), pour l'échelle du graphique
+            decimales = max((TanitaReportGenerator._decimales(p["valeurs"][key]) for p in chronologie), default=0)
+            graphiques.append({
+                "nom": TanitaReportGenerator._nom(key),
+                "unite": TanitaReportGenerator._unite(key),
+                "decimales": decimales,
+                "points": points,
+            })
+        return graphiques
 
     # Générer toutes les pages HTML
     def generateHtmlFiles(self):
