@@ -22,6 +22,19 @@
 <section class="detail" id="pesee-{{ loop.index }}"{% if not loop.first %} hidden{% endif %}>
     {{ m.profil(pesee, champs_profil) }}
 
+    <!-- Définitions du manuel pour le niveau d'activité et le type de corps -->
+    <dl class="infos-profil">
+    {% for champ, definitions in definitions_profil.items() %}
+        {% set valeur = pesee.valeurs[champ] %}
+        {% if definitions[valeur] %}
+        <div>
+            <dt>{{ champ }} : {{ valeur }}</dt>
+            <dd>{{ definitions[valeur] }}{% if definitions["_note"] %} {{ definitions["_note"] }}{% endif %}</dd>
+        </div>
+        {% endif %}
+    {% endfor %}
+    </dl>
+
     <!-- Mesures globales -->
     <h2>Composition globale</h2>
     <div class="carte carte-cases">

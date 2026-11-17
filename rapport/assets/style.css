@@ -499,6 +499,18 @@ fieldset.segmente legend {
 
 .case .repere { justify-content: flex-end; margin-top: 4px; }
 
+/* Définitions du niveau d'activité et du type de corps, sous le profil */
+.infos-profil {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px 24px;
+    margin: 12px 0 0;
+    font-size: 12px;
+}
+
+.infos-profil dt { font-weight: 600; color: var(--texte-2); }
+.infos-profil dd { margin: 2px 0 0; color: var(--texte-3); }
+
 /* Courte explication sous une mesure */
 .ligne-description { margin: 4px 0 0; font-size: 12px; color: var(--texte-3); }
 

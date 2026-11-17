@@ -96,6 +96,23 @@ class TanitaReportGenerator:
         "Métabolisme de base (kcal)": "Énergie dépensée au repos complet",
     }
 
+    # Définitions du manuel BC-601 affichées sous le profil de la page de détails,
+    # par champ puis par valeur affichée
+    DEFINITIONS_PROFIL = {
+        "Niveau d'activité": {
+            "1 · Peu ou pas d'exercice": "Vie peu active : peu ou pas d'exercice.",
+            "2 · Activité modérée": "Vie modérément active : exercice occasionnel, de faible intensité.",
+            "3 · Activité intense": "Activité physique intense.",
+            "_note": "Sert uniquement au calcul de l'apport calorique quotidien.",
+        },
+        "Type de corps": {
+            "Standard": "Réglage de la plupart des adultes. Le mode athlète est réservé à environ 10 h d'activité "
+                        "intense par semaine, avec un pouls au repos d'environ 60 battements par minute ou moins.",
+            "Athlète": "Environ 10 h d'activité intense par semaine, avec un pouls au repos d'environ 60 battements "
+                       "par minute ou moins. La balance utilise alors des formules adaptées et fixe le niveau d'activité à 3.",
+        },
+    }
+
     # Segments corporels mesurés par la balance
     SEGMENTS = ["bras droit", "bras gauche", "buste", "jambe droite", "jambe gauche"]
 
@@ -565,6 +582,7 @@ class TanitaReportGenerator:
                      champs_profil=TanitaReportGenerator.PROFIL,
                      globales=TanitaReportGenerator.GLOBALES,
                      descriptions=TanitaReportGenerator.DESCRIPTIONS,
+                     definitions_profil=TanitaReportGenerator.DEFINITIONS_PROFIL,
                      segments=TanitaReportGenerator.SEGMENTS,
                      **self._contexte("details", profil))
 
